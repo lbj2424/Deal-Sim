@@ -61,7 +61,6 @@ function allocMonthly(total, seed=1, smooth=0.12){
   return rounded;
 }
 
-}
 function buildT12Monthly(deal){
   const t12 = Calc.statementFromT12(deal);
   const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
