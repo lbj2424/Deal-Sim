@@ -36,6 +36,120 @@ const App = (() => {
       </div>
     `;
   }
+function allocMonthly(total, seed=1, smooth=0.12){
+  // Creates 12 weights ~ 1/12 with mild variation, then scales to match total exactly.
+  // smooth controls how "bumpy" months are.
+  let x = seed;
+  const rand = () => {
+    // deterministic pseudo-rng
+    x = (x * 1664525 + 1013904223) % 4294967296;
+    return x / 4294967296;
+  };
+
+  const w = [];
+  for (let i = 0; i < 12; i++){
+    const noise = (rand() - 0.5) * 2 * smooth; // [-smooth, +smooth]
+    w.push(Math.max(0.01, 1/12 + noise));
+  }
+
+  const wSum = w.reduce((a,b)=>a+b,0);
+  const raw = w.map(v => (v / wSum) * total);
+
+  // round to dollars and fix rounding drift on the last month
+  const rounded = raw.map(v => Math.round(v));
+  const drift = Math.round(total) - rounded.reduce((a,b)=>a+b,0);
+  rounded[11] += drift;
+
+  return rounded;
+}
+function buildT12Monthly(deal){
+  const t12 = Calc.statementFromT12(deal);
+  const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+  // Use deal id to seed so each deal looks different but stays consistent
+  let seed = 1;
+  for (const ch of String(deal.id || "mf_000")) seed += ch.charCodeAt(0);
+
+  // Income monthly
+  const incMonthly = {};
+  for (const [k,v] of Object.entries(t12.income || {})){
+    // income can be negative (vacancy loss). allocate based on absolute then reapply sign
+    const sign = v < 0 ? -1 : 1;
+    incMonthly[k] = allocMonthly(Math.abs(v), seed + k.length, 0.10).map(n => n * sign);
+  }
+
+  // Expense monthly
+  const expMonthly = {};
+  for (const [k,v] of Object.entries(t12.expenses || {})){
+    expMonthly[k] = allocMonthly(v, seed + k.length + 99, 0.08);
+  }
+
+  return { months, incMonthly, expMonthly };
+}
+function renderMonthlyT12Table(t12m){
+  const { months, incMonthly, expMonthly } = t12m;
+
+  function row(label, arr){
+    const total = arr.reduce((a,b)=>a+b,0);
+    return `
+      <tr>
+        <td>${titleCase(label)}</td>
+        ${arr.map(v => `<td>${money(v)}</td>`).join("")}
+        <td><b>${money(total)}</b></td>
+      </tr>
+    `;
+  }
+
+  function section(title, obj){
+    const keys = Object.keys(obj);
+    const rowsHTML = keys.map(k => row(k, obj[k])).join("");
+    return `
+      <h3 style="margin:10px 0 6px;">${title}</h3>
+      <div style="overflow:auto;">
+        <table>
+          <thead>
+            <tr>
+              <th style="min-width:180px;">Line Item</th>
+              ${months.map(m => `<th>${m}</th>`).join("")}
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rowsHTML}
+          </tbody>
+        </table>
+      </div>
+    `;
+  }
+
+  // Build NOI monthly
+  const incomeKeys = Object.keys(incMonthly);
+  const expKeys = Object.keys(expMonthly);
+
+  const incomeByMonth = Array(12).fill(0).map((_,i)=> incomeKeys.reduce((s,k)=>s + (incMonthly[k][i]||0), 0));
+  const expByMonth = Array(12).fill(0).map((_,i)=> expKeys.reduce((s,k)=>s + (expMonthly[k][i]||0), 0));
+  const noiByMonth = incomeByMonth.map((v,i)=> v - expByMonth[i]);
+
+  const noiRow = `
+    <h3 style="margin:12px 0 6px;">NOI</h3>
+    <div style="overflow:auto;">
+      <table>
+        <thead>
+          <tr>
+            <th style="min-width:180px;">Line Item</th>
+            ${months.map(m => `<th>${m}</th>`).join("")}
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${row("noi", noiByMonth)}
+        </tbody>
+      </table>
+    </div>
+  `;
+
+  return section("Income", incMonthly) + section("Expenses", expMonthly) + noiRow;
+}
 
   async function loadDeals(){
     if (DEALS.length) return DEALS;
@@ -148,6 +262,9 @@ const App = (() => {
 
       return res;
     }
+const t12m = buildT12Monthly(deal);
+const t12MonthEl = document.getElementById("t12MonthTable");
+if (t12MonthEl) t12MonthEl.innerHTML = renderMonthlyT12Table(t12m);
 
     updateResults();
     document.getElementById("recalc").addEventListener("click", updateResults);
