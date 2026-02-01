@@ -1,0 +1,38 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Deal Simulator</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <h1>Deal Simulator</h1>
+    <nav>
+      <a href="index.html" class="active">Deals</a>
+      <a href="track.html">Track Record</a>
+    </nav>
+  </header>
+
+  <main class="container">
+    <div class="row">
+      <button id="btnGenerate" class="btn">Generate a Random Deal</button>
+      <span class="muted" id="genNote"></span>
+    </div>
+
+    <h2>Multifamily Deals</h2>
+    <div id="dealGrid" class="grid"></div>
+  </main>
+
+  <script src="js/app.js"></script>
+  <script src="js/generator.js"></script>
+  <script>
+    App.renderDealFeed();
+    document.getElementById("btnGenerate").addEventListener("click", () => {
+      const d = Generator.makeRandomDeal();
+      App.addGeneratedDealToFeed(d);
+      document.getElementById("genNote").textContent = `Generated: ${d.name}`;
+    });
+  </script>
+</body>
+</html>
