@@ -37,4 +37,7 @@ th, td { border-bottom: 1px solid #233244; padding: 10px; text-align:left; }
 table { width:100%; border-collapse: collapse; }
 th, td { border-bottom: 1px solid #233244; padding: 10px; text-align:left; }
 th { color:#cfe0f6; }
+thead th { position: sticky; top: 0; background: #0c1320; }
+th, td { white-space: nowrap; }
+
 
