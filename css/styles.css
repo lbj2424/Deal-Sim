@@ -39,5 +39,9 @@ th, td { border-bottom: 1px solid #233244; padding: 10px; text-align:left; }
 th { color:#cfe0f6; }
 thead th { position: sticky; top: 0; background: #0c1320; }
 th, td { white-space: nowrap; }
+.btn.active {
+  filter: brightness(1.05);
+  outline: 2px solid rgba(59,130,246,0.8);
+}
 
 
