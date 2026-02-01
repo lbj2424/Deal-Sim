@@ -1,4 +1,94 @@
 const Calc = (() => {
+  function sumObj(o){
+  return Object.values(o || {}).reduce((a,b)=>a + Number(b || 0), 0);
+}
+
+function statementFromT12(deal){
+  const inc = deal.t12?.income || {};
+  const exp = deal.t12?.expenses || {};
+
+  const totalIncome = sumObj(inc);
+  const totalExpenses = sumObj(exp);
+  const noi = totalIncome - totalExpenses;
+
+  return {
+    income: inc,
+    expenses: exp,
+    totalIncome,
+    totalExpenses,
+    noi
+  };
+}
+
+function proformaFromInputs(deal, inputs){
+  const t12 = statementFromT12(deal);
+
+  // derive "market/stabilized" GPR from in-place avg rent + rent premium
+  const baseRentMonthly = deal.avgRentInPlace; // in-place
+  const premium = Number(inputs.rentPremium || 0);
+  const rentMonthlyPF = baseRentMonthly + premium;
+
+  const gprPF =
+    deal.units * rentMonthlyPF * 12;
+
+  // Other income: start from T12 per-unit monthly and let it grow with rent growth
+  const otherIncomeT12 = (deal.t12?.income?.otherIncome || 0);
+  const otherIncomePF = otherIncomeT12 * (1 + inputs.rentGrowth);
+
+  const stabilizedOcc = deal.uw?.stabilizedOccupancy ?? 0.94;
+  const vacPF = 1 - stabilizedOcc;
+
+  const vacancyLossPF = -(gprPF * vacPF);
+
+  const concessionsPF = deal.t12?.income?.concessionsBadDebt || 0; // keep as-is for MVP
+
+  const incomePF = {
+    gpr: gprPF,
+    vacancyLoss: vacancyLossPF,
+    concessionsBadDebt: concessionsPF,
+    otherIncome: otherIncomePF
+  };
+
+  const egiPF = sumObj(incomePF);
+
+  // Expenses: grow T12 expenses by expense growth
+  const expGrowth = inputs.expGrowth;
+  const baseExp = { ...(deal.t12?.expenses || {}) };
+
+  // Remove managementFee from base; we will compute as % of EGI (more legit)
+  baseExp.managementFee = 0;
+
+  const grownExp = {};
+  for (const [k,v] of Object.entries(baseExp)){
+    grownExp[k] = Number(v || 0) * (1 + expGrowth);
+  }
+
+  // Tax + insurance step-ups (common underwriting)
+  const taxStep = deal.uw?.taxStepUpPct ?? 0.10;
+  const insStep = deal.uw?.insuranceStepUpPct ?? 0.07;
+
+  if (grownExp.propertyTaxes != null) grownExp.propertyTaxes = grownExp.propertyTaxes * (1 + taxStep);
+  if (grownExp.insurance != null) grownExp.insurance = grownExp.insurance * (1 + insStep);
+
+  // Management fee as % of EGI
+  const mgmtPct = deal.uw?.managementFeePct ?? 0.05;
+  const managementFee = -(egiPF * 0) + (egiPF * mgmtPct); // keep positive expense number
+  grownExp.managementFee = managementFee;
+
+  const totalExpensesPF = sumObj(grownExp);
+  const noiPF = egiPF - totalExpensesPF;
+
+  return {
+    income: incomePF,
+    expenses: grownExp,
+    totalIncome: egiPF,
+    totalExpenses: totalExpensesPF,
+    noi: noiPF,
+    rentMonthlyPF,
+    stabilizedOcc
+  };
+}
+
   function pmt(rateMonthly, nMonths, pv){
     if (rateMonthly === 0) return pv / nMonths;
     const r = rateMonthly;
