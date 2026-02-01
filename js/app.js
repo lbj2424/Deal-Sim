@@ -243,6 +243,12 @@ function renderStatementTable(stmt){
     </div>
   `;
 }
+  function _renderStatement(id, stmt){
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.innerHTML = renderStatementTable(stmt);
+}
+
 
   return {
     renderDealFeed,
