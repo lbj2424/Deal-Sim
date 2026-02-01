@@ -44,6 +44,8 @@ function allocMonthly(total, seed=1, smooth=0.12){
     // deterministic pseudo-rng
     x = (x * 1664525 + 1013904223) % 4294967296;
     return x / 4294967296;
+    smooth = Math.min(0.20, Math.max(0, smooth));
+
   };
 
   const w = [];
@@ -88,6 +90,8 @@ function buildT12Monthly(deal){
 }
 function renderMonthlyT12Table(t12m){
   const { months, incMonthly, expMonthly } = t12m;
+  ${row("NOI", noiByMonth)}
+
 
   function row(label, arr){
     const total = arr.reduce((a,b)=>a+b,0);
@@ -235,36 +239,40 @@ function renderMonthlyT12Table(t12m){
       };
     }
 
-    function updateResults(){
-      const inputs = readInputs();
-      const res = Calc.simulate(deal, inputs);
+   function updateResults(){
+  const inputs = readInputs();
+  const res = Calc.simulate(deal, inputs);
 
-      // NEW: show T12 + Pro Forma tables (updates on recalc)
-      const t12 = Calc.statementFromT12(deal);
-      const pf  = Calc.proformaFromInputs(deal, inputs);
+  // show T12 + Pro Forma tables (updates on recalc)
+  const t12 = Calc.statementFromT12(deal);
+  const pf  = Calc.proformaFromInputs(deal, inputs);
 
-      const t12El = document.getElementById("t12Table");
-      if (t12El) t12El.innerHTML = renderStatementTable(t12);
+  const t12El = document.getElementById("t12Table");
+  if (t12El) t12El.innerHTML = renderStatementTable(t12);
 
-      const pfEl = document.getElementById("pfTable");
-      if (pfEl) pfEl.innerHTML = renderStatementTable(pf);
+  const pfEl = document.getElementById("pfTable");
+  if (pfEl) pfEl.innerHTML = renderStatementTable(pf);
 
-      renderKV(document.getElementById("results"), [
-        { k:"IRR", v: pct(res.irr) },
-        { k:"Equity Multiple", v: fmt(res.equityMultiple, 2) + "x" },
-        { k:"Avg Cash-on-Cash", v: pct(res.avgCoC) },
-        { k:"Min DSCR", v: fmt(res.minDSCR, 2) },
-        { k:"Worst Break-even Occ", v: Math.round(res.breakEvenOccMax*100) + "%" },
-        { k:"Exit Price", v: money(res.exitPrice) },
-        { k:"T12 NOI", v: money(res.noiYear1) },
-        { k:"Pro Forma NOI", v: money(res.noiProForma) }
-      ]);
+  // NEW: monthly T12 (12 months)
+  const t12m = buildT12Monthly(deal);
+  const t12MonthEl = document.getElementById("t12MonthTable");
+  if (t12MonthEl) t12MonthEl.innerHTML = renderMonthlyT12Table(t12m);
 
-      return res;
-    }
-const t12m = buildT12Monthly(deal);
-const t12MonthEl = document.getElementById("t12MonthTable");
-if (t12MonthEl) t12MonthEl.innerHTML = renderMonthlyT12Table(t12m);
+  renderKV(document.getElementById("results"), [
+    { k:"IRR", v: pct(res.irr) },
+    { k:"Equity Multiple", v: fmt(res.equityMultiple, 2) + "x" },
+    { k:"Avg Cash-on-Cash", v: pct(res.avgCoC) },
+    { k:"Min DSCR", v: fmt(res.minDSCR, 2) },
+    { k:"Worst Break-even Occ", v: Math.round(res.breakEvenOccMax*100) + "%" },
+    { k:"Exit Price", v: money(res.exitPrice) },
+    { k:"T12 NOI", v: money(res.noiYear1) },
+    { k:"Pro Forma NOI", v: money(res.noiProForma) }
+  ]);
+
+  return res;
+}
+
+
 
     updateResults();
     document.getElementById("recalc").addEventListener("click", updateResults);
