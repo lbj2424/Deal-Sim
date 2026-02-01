@@ -37,15 +37,12 @@ const App = (() => {
     `;
   }
 function allocMonthly(total, seed=1, smooth=0.12){
-  // Creates 12 weights ~ 1/12 with mild variation, then scales to match total exactly.
-  // smooth controls how "bumpy" months are.
+  smooth = Math.min(0.20, Math.max(0, smooth)); // clamp
+
   let x = seed;
   const rand = () => {
-    // deterministic pseudo-rng
     x = (x * 1664525 + 1013904223) % 4294967296;
     return x / 4294967296;
-    smooth = Math.min(0.20, Math.max(0, smooth));
-
   };
 
   const w = [];
@@ -57,12 +54,13 @@ function allocMonthly(total, seed=1, smooth=0.12){
   const wSum = w.reduce((a,b)=>a+b,0);
   const raw = w.map(v => (v / wSum) * total);
 
-  // round to dollars and fix rounding drift on the last month
   const rounded = raw.map(v => Math.round(v));
   const drift = Math.round(total) - rounded.reduce((a,b)=>a+b,0);
   rounded[11] += drift;
 
   return rounded;
+}
+
 }
 function buildT12Monthly(deal){
   const t12 = Calc.statementFromT12(deal);
@@ -88,16 +86,15 @@ function buildT12Monthly(deal){
 
   return { months, incMonthly, expMonthly };
 }
+
 function renderMonthlyT12Table(t12m){
   const { months, incMonthly, expMonthly } = t12m;
-  ${row("NOI", noiByMonth)}
-
 
   function row(label, arr){
     const total = arr.reduce((a,b)=>a+b,0);
     return `
       <tr>
-        <td>${titleCase(label)}</td>
+        <td>${label === "NOI" ? "NOI" : titleCase(label)}</td>
         ${arr.map(v => `<td>${money(v)}</td>`).join("")}
         <td><b>${money(total)}</b></td>
       </tr>
@@ -126,7 +123,6 @@ function renderMonthlyT12Table(t12m){
     `;
   }
 
-  // Build NOI monthly
   const incomeKeys = Object.keys(incMonthly);
   const expKeys = Object.keys(expMonthly);
 
@@ -146,7 +142,7 @@ function renderMonthlyT12Table(t12m){
           </tr>
         </thead>
         <tbody>
-          ${row("noi", noiByMonth)}
+          ${row("NOI", noiByMonth)}
         </tbody>
       </table>
     </div>
@@ -154,6 +150,7 @@ function renderMonthlyT12Table(t12m){
 
   return section("Income", incMonthly) + section("Expenses", expMonthly) + noiRow;
 }
+
 
   async function loadDeals(){
     if (DEALS.length) return DEALS;
