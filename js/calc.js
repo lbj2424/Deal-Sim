@@ -26,18 +26,160 @@ const Calc = (() => {
   function sumObj(o){
     return Object.values(o || {}).reduce((a,b)=>a + Number(b || 0), 0);
   }
+function _seedFromDeal(deal){
+  let seed = 12345;
+  const s = String(deal?.id || deal?.name || "deal");
+  for (const ch of s) seed = (seed * 31 + ch.charCodeAt(0)) >>> 0;
+  return seed;
+}
 
-  // ---- Statement builders ----
-  function statementFromT12(deal){
-    const inc = deal.t12?.income || {};
-    const exp = deal.t12?.expenses || {};
+function _rng(seed){
+  let x = seed >>> 0;
+  return () => {
+    x = (x * 1664525 + 1013904223) >>> 0;
+    return x / 4294967296;
+  };
+}
 
-    const totalIncome = sumObj(inc);
-    const totalExpenses = sumObj(exp);
-    const noi = totalIncome - totalExpenses;
+function _sum(obj){
+  return Object.values(obj || {}).reduce((a,b)=>a + Number(b || 0), 0);
+}
 
-    return { income: inc, expenses: exp, totalIncome, totalExpenses, noi };
+// Split a total expense into realistic line items with mild variation.
+// Ensures line items sum exactly to total.
+function _splitOpex(total, rand){
+  const pct = (base, jitter=0.15) => base * (1 + (rand()-0.5)*2*jitter);
+
+  // Typical-ish multifamily distribution (rough but believable)
+  let payroll            = pct(0.08);
+  let repairsMaintenance = pct(0.12);
+  let contractServices   = pct(0.07);
+  let turnoverMakeReady  = pct(0.05);
+  let utilities          = pct(0.10);
+  let marketing          = pct(0.02);
+  let admin              = pct(0.01);
+  let other              = pct(0.03);
+
+  const fixed = payroll+repairsMaintenance+contractServices+turnoverMakeReady+utilities+marketing+admin+other;
+  const scale = fixed > 0 ? (1 / fixed) : 1;
+
+  payroll            *= scale;
+  repairsMaintenance *= scale;
+  contractServices   *= scale;
+  turnoverMakeReady  *= scale;
+  utilities          *= scale;
+  marketing          *= scale;
+  admin              *= scale;
+  other              *= scale;
+
+  const raw = {
+    payroll:            Math.round(total * payroll),
+    repairsMaintenance: Math.round(total * repairsMaintenance),
+    contractServices:   Math.round(total * contractServices),
+    turnoverMakeReady:  Math.round(total * turnoverMakeReady),
+    utilities:          Math.round(total * utilities),
+    marketing:          Math.round(total * marketing),
+    admin:              Math.round(total * admin),
+    other:              Math.round(total * other)
+  };
+
+  // Fix rounding drift
+  const drift = Math.round(total) - _sum(raw);
+  raw.other += drift;
+
+  return raw;
+}
+
+// Auto-generate a believable annual T12 from the deal facts.
+// Output matches your existing statement shape.
+function _generateT12(deal){
+  const rand = _rng(_seedFromDeal(deal));
+
+  const units = Number(deal.units || 0);
+  const rent  = Number(deal.avgRentInPlace || 0);
+  const occ   = Number(deal.occupancy ?? 0.92);
+  const oiPU  = Number(deal.otherIncomePerUnitMonthly || 0);
+
+  const gpr = Math.round(units * rent * 12);
+  const vacancyLoss = -Math.round(gpr * (1 - occ));
+
+  // concessions/bad debt small negative line (more in “messy” deals)
+  const concBadDebt = -Math.round(gpr * (0.002 + rand()*0.006));
+
+  const otherIncome = Math.round(units * oiPU * 12);
+
+  const income = {
+    gpr,
+    vacancyLoss,
+    concessionsBadDebt: concBadDebt,
+    otherIncome
+  };
+
+  // Build “NOI margin” from opexRatio, then back into expenses.
+  // Effective Gross Income:
+  const egi = gpr + vacancyLoss + concBadDebt + otherIncome;
+
+  const opexRatio = Number(deal.opexRatio ?? 0.45);
+  let totalOpex = Math.round(egi * opexRatio);
+
+  // Anchor taxes & insurance to purchase price (more legit)
+  const price = Number(deal.purchasePrice || 0);
+
+  // property taxes: ~0.9%–1.6% of price depending on randomness
+  const taxRate = 0.009 + rand()*0.007;
+  const propertyTaxes = Math.round(price * taxRate);
+
+  // insurance: ~0.20%–0.40% of price
+  const insRate = 0.002 + rand()*0.002;
+  const insurance = Math.round(price * insRate);
+
+  // Remaining opex after carving out taxes/insurance
+  const remaining = Math.max(0, totalOpex - propertyTaxes - insurance);
+  const split = _splitOpex(remaining, rand);
+
+  const expenses = {
+    ...split,
+    utilities: split.utilities, // keep explicit
+    propertyTaxes,
+    insurance
+  };
+
+  // Management fee: if you want it in T12, include it (otherwise you can keep it 0)
+  const mgmtPct = Number(deal.uw?.managementFeePct ?? 0.05);
+  const managementFee = Math.round(Math.max(0, egi) * mgmtPct);
+
+  // Decide whether to include mgmt fee as explicit line
+  // If you prefer to keep it in pro forma only, set to 0
+  expenses.managementFee = managementFee;
+
+  // Recompute totals to ensure consistency
+  const totalIncome = _sum(income);
+  const totalExpenses = _sum(expenses);
+  const noi = totalIncome - totalExpenses;
+
+  return { income, expenses, totalIncome, totalExpenses, noi };
+}
+
+function statementFromT12(deal){
+  // If the deal has a hand-entered T12 in JSON, use it
+  if (deal && deal.t12 && (deal.t12.income || deal.t12.expenses)){
+    const income = deal.t12.income || {};
+    const expenses = deal.t12.expenses || {};
+    const totalIncome = _sum(income);
+    const totalExpenses = _sum(expenses);
+    return {
+      income,
+      expenses,
+      totalIncome,
+      totalExpenses,
+      noi: totalIncome - totalExpenses
+    };
   }
+
+  // Otherwise auto-generate
+  return _generateT12(deal);
+}
+
 
   // Pro forma updates with your inputs
   function proformaFromInputs(deal, inputs){
