@@ -261,8 +261,8 @@ function renderMonthlyT12Table(t12m){
     { k:"Min DSCR", v: fmt(res.minDSCR, 2) },
     { k:"Worst Break-even Occ", v: Math.round(res.breakEvenOccMax*100) + "%" },
     { k:"Exit Price", v: money(res.exitPrice) },
-    { k:"T12 NOI", v: money(res.noiYear1) },
-    { k:"Pro Forma NOI", v: money(res.noiProForma) }
+    { k:"T12 NOI", v: money(t12.noi) },
+{ k:"Pro Forma NOI", v: money(pf.noi) }
   ]);
 
   return res;
