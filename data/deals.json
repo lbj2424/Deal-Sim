@@ -12,12 +12,7 @@
   "sellingCostPct": 0.02,
   "defaultDebt": { "ltv": 0.7, "rate": 0.0725, "amortYears": 30 },
 
-  "t12": {
-    "income": {
-      "gpr": 208800,
-      "vacancyLoss": -16704,
-      "concessionsBadDebt": -1200,
-      "otherIncome": 5040
+ 
     },
     "expenses": {
       "payroll": 9600,
@@ -69,12 +64,7 @@
     "capexPerUnitYear1": 1200,
     "sellingCostPct": 0.02,
     "defaultDebt": { "ltv": 0.65, "rate": 0.069, "amortYears": 30 },
-    "t12": {
-    "income": {
-      "gpr": 208800,
-      "vacancyLoss": -16704,
-      "concessionsBadDebt": -1200,
-      "otherIncome": 5040
+    
     },
     "expenses": {
       "payroll": 9600,
@@ -125,12 +115,7 @@
     "capexPerUnitYear1": 14500,
     "sellingCostPct": 0.02,
     "defaultDebt": { "ltv": 0.7, "rate": 0.075, "amortYears": 30 },
-    "t12": {
-    "income": {
-      "gpr": 208800,
-      "vacancyLoss": -16704,
-      "concessionsBadDebt": -1200,
-      "otherIncome": 5040
+   
     },
     "expenses": {
       "payroll": 9600,
@@ -181,12 +166,7 @@
     "capexPerUnitYear1": 6500,
     "sellingCostPct": 0.02,
     "defaultDebt": { "ltv": 0.7, "rate": 0.071, "amortYears": 30 },
-    "t12": {
-    "income": {
-      "gpr": 208800,
-      "vacancyLoss": -16704,
-      "concessionsBadDebt": -1200,
-      "otherIncome": 5040
+    
     },
     "expenses": {
       "payroll": 9600,
@@ -237,12 +217,7 @@
     "capexPerUnitYear1": 3000,
     "sellingCostPct": 0.02,
     "defaultDebt": { "ltv": 0.65, "rate": 0.0675, "amortYears": 30 },
-    "t12": {
-    "income": {
-      "gpr": 208800,
-      "vacancyLoss": -16704,
-      "concessionsBadDebt": -1200,
-      "otherIncome": 5040
+    
     },
     "expenses": {
       "payroll": 9600,
@@ -292,12 +267,7 @@
     "purchasePrice": 6400000,
     "capexPerUnitYear1": 8500,
     "sellingCostPct": 0.02,
-    "t12": {
-    "income": {
-      "gpr": 208800,
-      "vacancyLoss": -16704,
-      "concessionsBadDebt": -1200,
-      "otherIncome": 5040
+   
     },
     "expenses": {
       "payroll": 9600,
