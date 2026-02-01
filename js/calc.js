@@ -156,15 +156,15 @@ const split = _splitOpex(remaining, rand, profile);
 
 
   const expenses = {
-    ...split,
-    utilities: split.utilities, // keep explicit
-    propertyTaxes,
-    insurance
-  };
+  ...split,
+  propertyTaxes,
+  insurance
+};
 
-  // Management fee: if you want it in T12, include it (otherwise you can keep it 0)
-  const mgmtPct = Number(deal.uw?.managementFeePct ?? 0.05);
-  const managementFee = Math.round(Math.max(0, egi) * mgmtPct);
+
+  const mgmtPct = (deal.uw?.managementFeePct ?? 0.05);
+pfExpenses.managementFee = egi * mgmtPct;
+
 
   // Decide whether to include mgmt fee as explicit line
   // If you prefer to keep it in pro forma only, set to 0
@@ -204,12 +204,13 @@ function proformaFromInputs(deal, inputs){
   const t12 = statementFromT12(deal);
 
   const uw = {
-    stabilizedOccupancy: 0.94,
-    managementFeePct: 0.05,
-    taxStepUpPct: 0.10,
-    insuranceStepUpPct: 0.07,
-    ...(deal.uw || {})
-  };
+  stabilizedOccupancy: 0.94,
+  managementFeePct: 0.05,
+  taxStepUpPct: 0.10,
+  insuranceStepUpPct: 0.07,
+  ...(deal.uw || {})
+};
+
 
   const stabilizedOcc = uw.stabilizedOccupancy;
   const vacPF = 1 - stabilizedOcc;
@@ -351,23 +352,26 @@ function proformaFromInputs(deal, inputs){
         noi = t12.noi;
       } else if (y === 2){
         noi = pf0.noi;
-      } else {
-        // Grow PF from prior year
-        for (const k of Object.keys(pfIncome)){
-          pfIncome[k] = Number(pfIncome[k] || 0) * (1 + inputs.rentGrowth);
-        }
-        for (const k of Object.keys(pfExpenses)){
-          // Keep management fee tied to income by recomputing later
-          if (k === "managementFee") continue;
-          pfExpenses[k] = Number(pfExpenses[k] || 0) * (1 + inputs.expGrowth);
-        }
+     } else {
+  // Grow PF from prior year
+  for (const k of Object.keys(pfIncome)){
+    pfIncome[k] = Number(pfIncome[k] || 0) * (1 + inputs.rentGrowth);
+  }
 
-        const egi = sumObj(pfIncome);
-        const mgmtPct = deal.uw?.managementFeePct ?? 0.05;
-        pfExpenses.managementFee = egi * mgmtPct;
+  for (const k of Object.keys(pfExpenses)){
+    // Keep management fee tied to income by recomputing later
+    if (k === "managementFee") continue;
+    pfExpenses[k] = Number(pfExpenses[k] || 0) * (1 + inputs.expGrowth);
+  }
 
-        noi = egi - sumObj(pfExpenses);
-      }
+  const egi = sumObj(pfIncome);
+
+  // ✅ THIS is where the line goes
+  pfExpenses.managementFee = egi * uw.managementFeePct;
+
+  noi = egi - sumObj(pfExpenses);
+}
+
 
       const cf = noi - debtServiceYear;
       cfs.push(cf);
