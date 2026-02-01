@@ -5,6 +5,35 @@ const App = (() => {
   function money(n){
     return Number(n).toLocaleString(undefined,{style:"currency",currency:"USD",maximumFractionDigits:0});
   }
+  function titleCase(s){
+  return String(s).replace(/([A-Z])/g, " $1").replace(/^./, c => c.toUpperCase()).trim();
+}
+
+function renderStatementTable(stmt){
+  const rows = (obj) => Object.entries(obj || {}).map(([k,v]) => `
+    <tr><td>${titleCase(k)}</td><td>${money(v)}</td></tr>
+  `).join("");
+
+  return `
+    <table>
+      <tbody>${rows(stmt.income)}</tbody>
+      <tr><th>Total Income</th><th>${money(stmt.totalIncome)}</th></tr>
+    </table>
+
+    <div style="height:12px;"></div>
+
+    <table>
+      <tbody>${rows(stmt.expenses)}</tbody>
+      <tr><th>Total Expenses</th><th>${money(stmt.totalExpenses)}</th></tr>
+    </table>
+
+    <div style="height:12px;"></div>
+    <div class="row">
+      <span class="badge">NOI: ${money(stmt.noi)}</span>
+    </div>
+  `;
+}
+
   function pct(n){ return (n*100).toFixed(2) + "%"; }
   function fmt(n, digits=2){ return Number(n).toFixed(digits); }
 
@@ -58,7 +87,19 @@ const App = (() => {
     el.innerHTML = items.map(x => `
       <div><div class="k">${x.k}</div><div class="v">${x.v}</div></div>
     `).join("");
+    { k:"T12 NOI", v: money(res.noiYear1) },
+{ k:"Pro Forma NOI", v: money(res.noiProForma) },
+
   }
+  const t12 = Calc.statementFromT12(deal);
+const pf = Calc.proformaFromInputs(deal, inputs);
+
+const t12El = document.getElementById("t12Table");
+if (t12El) t12El.innerHTML = renderStatementTable(t12);
+
+const pfEl = document.getElementById("pfTable");
+if (pfEl) pfEl.innerHTML = renderStatementTable(pf);
+
 
   async function initDealPage(){
     const id = getQueryParam("id");
