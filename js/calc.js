@@ -45,43 +45,58 @@ function _sum(obj){
   return Object.values(obj || {}).reduce((a,b)=>a + Number(b || 0), 0);
 }
 
-// Split a total expense into realistic line items with mild variation.
-// Ensures line items sum exactly to total.
-function _splitOpex(total, rand){
-  const pct = (base, jitter=0.15) => base * (1 + (rand()-0.5)*2*jitter);
+function _splitOpex(total, rand, profile="multifamily"){
+  const pct = (base, jitter=0.18) => base * (1 + (rand()-0.5)*2*jitter);
 
-  // Typical-ish multifamily distribution (rough but believable)
-  let payroll            = pct(0.08);
-  let repairsMaintenance = pct(0.12);
-  let contractServices   = pct(0.07);
-  let turnoverMakeReady  = pct(0.05);
-  let utilities          = pct(0.10);
-  let marketing          = pct(0.02);
-  let admin              = pct(0.01);
-  let other              = pct(0.03);
-
-  const fixed = payroll+repairsMaintenance+contractServices+turnoverMakeReady+utilities+marketing+admin+other;
-  const scale = fixed > 0 ? (1 / fixed) : 1;
-
-  payroll            *= scale;
-  repairsMaintenance *= scale;
-  contractServices   *= scale;
-  turnoverMakeReady  *= scale;
-  utilities          *= scale;
-  marketing          *= scale;
-  admin              *= scale;
-  other              *= scale;
-
-  const raw = {
-    payroll:            Math.round(total * payroll),
-    repairsMaintenance: Math.round(total * repairsMaintenance),
-    contractServices:   Math.round(total * contractServices),
-    turnoverMakeReady:  Math.round(total * turnoverMakeReady),
-    utilities:          Math.round(total * utilities),
-    marketing:          Math.round(total * marketing),
-    admin:              Math.round(total * admin),
-    other:              Math.round(total * other)
+  // Base weights
+  let w = {
+    payroll:            0.08,
+    repairsMaintenance: 0.12,
+    contractServices:   0.07,
+    turnoverMakeReady:  0.05,
+    utilities:          0.10,
+    marketing:          0.02,
+    admin:              0.01,
+    other:              0.03
   };
+
+  // Profile tilts (simple but very effective)
+  if (profile === "yield_stable"){
+    w.repairsMaintenance -= 0.02;
+    w.turnoverMakeReady  -= 0.01;
+    w.marketing          -= 0.005;
+    w.contractServices   += 0.01;
+    w.payroll            += 0.01;
+    w.other              += 0.005;
+  }
+
+  if (profile === "classic_value_add"){
+    w.repairsMaintenance += 0.02;
+    w.turnoverMakeReady  += 0.01;
+    w.contractServices   += 0.005;
+    w.marketing          += 0.005;
+    w.utilities          -= 0.01;
+  }
+
+  if (profile === "heavy_lift"){
+    w.repairsMaintenance += 0.04;
+    w.turnoverMakeReady  += 0.03;
+    w.marketing          += 0.015;
+    w.contractServices   += 0.015;
+    w.payroll            -= 0.01;
+    w.utilities          -= 0.02;
+  }
+
+  // Apply jitter + normalize
+  const keys = Object.keys(w);
+  const rawW = {};
+  for (const k of keys) rawW[k] = Math.max(0.001, pct(w[k], 0.22));
+
+  const wSum = Object.values(rawW).reduce((a,b)=>a+b,0);
+  for (const k of keys) rawW[k] = rawW[k] / (wSum || 1);
+
+  const raw = {};
+  for (const k of keys) raw[k] = Math.round(total * rawW[k]);
 
   // Fix rounding drift
   const drift = Math.round(total) - _sum(raw);
@@ -89,6 +104,7 @@ function _splitOpex(total, rand){
 
   return raw;
 }
+
 
 // Auto-generate a believable annual T12 from the deal facts.
 // Output matches your existing statement shape.
@@ -135,7 +151,9 @@ function _generateT12(deal){
 
   // Remaining opex after carving out taxes/insurance
   const remaining = Math.max(0, totalOpex - propertyTaxes - insurance);
-  const split = _splitOpex(remaining, rand);
+  const profile = deal?.coach?.profile || "multifamily";
+const split = _splitOpex(remaining, rand, profile);
+
 
   const expenses = {
     ...split,
@@ -181,71 +199,81 @@ function statementFromT12(deal){
 }
 
 
-  // Pro forma updates with your inputs
-  function proformaFromInputs(deal, inputs){
-    const t12 = statementFromT12(deal);
+// Pro forma updates with your inputs (built from statementFromT12, not deal.t12)
+function proformaFromInputs(deal, inputs){
+  const t12 = statementFromT12(deal);
 
-    const stabilizedOcc = deal.uw?.stabilizedOccupancy ?? 0.94;
-    const vacPF = 1 - stabilizedOcc;
+  const uw = {
+    stabilizedOccupancy: 0.94,
+    managementFeePct: 0.05,
+    taxStepUpPct: 0.10,
+    insuranceStepUpPct: 0.07,
+    ...(deal.uw || {})
+  };
 
-    // Use in-place rent + your rent premium for PF rent
-    const baseRentMonthly = Number(deal.avgRentInPlace || 0);
-    const premium = Number(inputs.rentPremium || 0);
-    const rentMonthlyPF = baseRentMonthly + premium;
+  const stabilizedOcc = uw.stabilizedOccupancy;
+  const vacPF = 1 - stabilizedOcc;
 
-    const gprPF = Number(deal.units || 0) * rentMonthlyPF * 12;
+  // Use in-place rent + your rent premium for PF rent
+  const baseRentMonthly = Number(deal.avgRentInPlace || 0);
+  const premium = Number(inputs.rentPremium || 0);
+  const rentMonthlyPF = baseRentMonthly + premium;
 
-    // Other income: start from T12 and grow with rent growth
-    const otherIncomeT12 = Number(deal.t12?.income?.otherIncome || 0);
-    const otherIncomePF = otherIncomeT12 * (1 + inputs.rentGrowth);
+  const units = Number(deal.units || 0);
+  const gprPF = units * rentMonthlyPF * 12;
 
-    const vacancyLossPF = -(gprPF * vacPF);
-    const concessionsPF = Number(deal.t12?.income?.concessionsBadDebt || 0);
+  // Start other income / concessions from T12, then apply growth
+  const otherIncomeT12 = Number(t12.income?.otherIncome || 0);
+  const otherIncomePF = otherIncomeT12 * (1 + Number(inputs.rentGrowth || 0));
 
-    const incomePF = {
-      gpr: gprPF,
-      vacancyLoss: vacancyLossPF,
-      concessionsBadDebt: concessionsPF,
-      otherIncome: otherIncomePF
-    };
+  const concessionsT12 = Number(t12.income?.concessionsBadDebt || 0);
+  const concessionsPF = concessionsT12; // keep flat unless you add a separate input later
 
-    const egiPF = sumObj(incomePF);
+  const vacancyLossPF = -Math.round(gprPF * vacPF);
 
-    // Expenses: grow T12 expenses by expense growth
-    const expGrowth = inputs.expGrowth;
-    const baseExp = { ...(deal.t12?.expenses || {}) };
+  const incomePF = {
+    gpr: Math.round(gprPF),
+    vacancyLoss: Math.round(vacancyLossPF),
+    concessionsBadDebt: Math.round(concessionsPF),
+    otherIncome: Math.round(otherIncomePF)
+  };
 
-    // remove mgmt fee from base; compute as % of EGI
-    baseExp.managementFee = 0;
+  const egiPF = sumObj(incomePF);
 
-    const grownExp = {};
-    for (const [k,v] of Object.entries(baseExp)){
-      grownExp[k] = Number(v || 0) * (1 + expGrowth);
-    }
+  // Expenses: grow T12 expenses by expense growth
+  const expGrowth = Number(inputs.expGrowth || 0);
 
-    // Step-ups (legit underwriting)
-    const taxStep = deal.uw?.taxStepUpPct ?? 0.10;
-    const insStep = deal.uw?.insuranceStepUpPct ?? 0.07;
-    if (grownExp.propertyTaxes != null) grownExp.propertyTaxes = grownExp.propertyTaxes * (1 + taxStep);
-    if (grownExp.insurance != null) grownExp.insurance = grownExp.insurance * (1 + insStep);
+  const baseExp = { ...(t12.expenses || {}) };
 
-    // Management fee
-    const mgmtPct = deal.uw?.managementFeePct ?? 0.05;
-    grownExp.managementFee = egiPF * mgmtPct;
+  // Remove mgmt fee from base; compute as % of EGI
+  baseExp.managementFee = 0;
 
-    const totalExpensesPF = sumObj(grownExp);
-    const noiPF = egiPF - totalExpensesPF;
-
-    return {
-      income: incomePF,
-      expenses: grownExp,
-      totalIncome: egiPF,
-      totalExpenses: totalExpensesPF,
-      noi: noiPF,
-      stabilizedOcc,
-      rentMonthlyPF
-    };
+  const grownExp = {};
+  for (const [k,v] of Object.entries(baseExp)){
+    grownExp[k] = Number(v || 0) * (1 + expGrowth);
   }
+
+  // Step-ups (more legit underwriting)
+  if (grownExp.propertyTaxes != null) grownExp.propertyTaxes = grownExp.propertyTaxes * (1 + uw.taxStepUpPct);
+  if (grownExp.insurance != null) grownExp.insurance = grownExp.insurance * (1 + uw.insuranceStepUpPct);
+
+  // Management fee as % of EGI
+  grownExp.managementFee = egiPF * uw.managementFeePct;
+
+  const totalExpensesPF = sumObj(grownExp);
+  const noiPF = egiPF - totalExpensesPF;
+
+  return {
+    income: incomePF,
+    expenses: grownExp,
+    totalIncome: egiPF,
+    totalExpenses: totalExpensesPF,
+    noi: noiPF,
+    stabilizedOcc,
+    rentMonthlyPF
+  };
+}
+
 
   // Better break-even occupancy using PF numbers:
   // BE Occ ≈ (OpEx + DebtSvc) / (GPR * (1 - OpEx/EGI))
