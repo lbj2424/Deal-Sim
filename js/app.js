@@ -248,6 +248,7 @@ function renderStatementTable(stmt){
   if (!el) return;
   el.innerHTML = renderStatementTable(stmt);
 }
+return { renderDealFeed, initDealPage, renderTrackRecord, addGeneratedDealToFeed, _renderStatement };
 
 
   return {
