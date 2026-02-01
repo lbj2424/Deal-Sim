@@ -1,32 +1,62 @@
 [
   {
-    "id": "mf_001",
-    "name": "12-Unit Value Add – Provo, UT",
-    "units": 12,
-    "avgRentInPlace": 1450,
-    "otherIncomePerUnitMonthly": 35,
-    "occupancy": 0.92,
-    "opexRatio": 0.42,
-    "purchasePrice": 2100000,
-    "capexPerUnitYear1": 9000,
-    "sellingCostPct": 0.02,
-    "defaultDebt": { "ltv": 0.7, "rate": 0.0725, "amortYears": 30 },
-    "coach": {
-      "profile": "classic_value_add",
-      "reasonable": {
-        "rentGrowthMin": 0.02,
-        "rentGrowthMax": 0.035,
-        "exitCapMin": 0.0575,
-        "exitCapMax": 0.065,
-        "rentPremiumCeilingPerUnit": 225
-      },
-      "knownFlags": ["tax_reassessment_likely"],
-      "dealTruths": [
-        "Value is created primarily through rent lift and operations, not cap compression.",
-        "Exit cap sensitivity is a key swing factor."
-      ]
+  "id": "mf_001",
+  "name": "12-Unit Value Add – Provo, UT",
+  "units": 12,
+  "avgRentInPlace": 1450,
+  "otherIncomePerUnitMonthly": 35,
+  "occupancy": 0.92,
+  "opexRatio": 0.42,
+  "purchasePrice": 2100000,
+  "capexPerUnitYear1": 9000,
+  "sellingCostPct": 0.02,
+  "defaultDebt": { "ltv": 0.7, "rate": 0.0725, "amortYears": 30 },
+
+  "t12": {
+    "income": {
+      "gpr": 208800,
+      "vacancyLoss": -16704,
+      "concessionsBadDebt": -1200,
+      "otherIncome": 5040
+    },
+    "expenses": {
+      "payroll": 9600,
+      "repairsMaintenance": 14200,
+      "contractServices": 6800,
+      "turnoverMakeReady": 5200,
+      "utilities": 12600,
+      "propertyTaxes": 18400,
+      "insurance": 7200,
+      "marketing": 1800,
+      "admin": 1200,
+      "managementFee": 0,
+      "other": 1600
     }
   },
+  "uw": {
+    "stabilizedOccupancy": 0.94,
+    "managementFeePct": 0.05,
+    "taxStepUpPct": 0.10,
+    "insuranceStepUpPct": 0.07
+  },
+
+  "coach": {
+    "profile": "classic_value_add",
+    "reasonable": {
+      "rentGrowthMin": 0.02,
+      "rentGrowthMax": 0.035,
+      "exitCapMin": 0.0575,
+      "exitCapMax": 0.065,
+      "rentPremiumCeilingPerUnit": 225
+    },
+    "knownFlags": ["tax_reassessment_likely"],
+    "dealTruths": [
+      "Value is created primarily through rent lift and operations, not cap compression.",
+      "Exit cap sensitivity is a key swing factor."
+    ]
+  }
+}
+,
   {
     "id": "mf_002",
     "name": "48-Unit Stabilized – Mesa, AZ",
