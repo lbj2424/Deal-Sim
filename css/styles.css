@@ -1,0 +1,36 @@
+:root { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; }
+body { margin: 0; background: #0b0f14; color: #e8eef6; }
+a { color: #b7d6ff; text-decoration: none; }
+a.active { text-decoration: underline; }
+
+.topbar { display:flex; justify-content:space-between; align-items:center; padding: 14px 18px; border-bottom: 1px solid #233244; background:#0f1620; position:sticky; top:0; }
+.topbar h1 { margin:0; font-size: 18px; }
+nav a { margin-left: 12px; }
+
+.container { max-width: 1050px; margin: 0 auto; padding: 18px; }
+.card { border: 1px solid #233244; border-radius: 14px; padding: 14px; background:#0f1620; margin: 14px 0; box-shadow: 0 10px 30px rgba(0,0,0,.25); }
+
+.grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+.dealCard { border: 1px solid #233244; border-radius: 14px; padding: 12px; background:#0f1620; }
+.dealCard h3 { margin: 0 0 6px 0; }
+.muted { color:#9fb0c6; font-size: 13px; }
+
+.btn { background:#2d7dff; color:white; border:0; padding: 10px 12px; border-radius: 12px; cursor:pointer; font-weight: 650; }
+.btn.secondary { background:#1b2636; border: 1px solid #233244; }
+.btn:active { transform: translateY(1px); }
+.row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+
+.twoCol { display:grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+@media (max-width: 900px){ .twoCol { grid-template-columns: 1fr; } }
+
+.formGrid { display:grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.formGrid label { display:flex; flex-direction:column; gap: 6px; font-size: 13px; color:#cfe0f6; }
+input, textarea { background:#0b0f14; color:#e8eef6; border: 1px solid #233244; border-radius: 12px; padding: 10px; outline:none; }
+textarea { grid-column: 1 / -1; }
+.kv { display:grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.kv div { border: 1px solid #233244; border-radius: 12px; padding: 10px; background:#0b0f14; }
+.kv .k { color:#9fb0c6; font-size:12px; margin-bottom: 4px; }
+.kv .v { font-weight: 650; }
+table { width:100%; border-collapse: collapse; }
+th, td { border-bottom: 1px solid #233244; padding: 10px; text-align:left; }
+.badge { display:inline-block; padding: 4px 8px; border-radius: 999px; border:1px solid #233244; background:#0b0f14; font-size:12px; color:#cfe0f6; }
