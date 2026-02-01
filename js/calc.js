@@ -225,6 +225,7 @@ function proformaFromInputs(deal, inputs){
       debtServiceYear
     };
   }
+return { simulate, _statementFromT12: statementFromT12, _proformaFromInputs: proformaFromInputs };
 
   return { simulate };
 })();
