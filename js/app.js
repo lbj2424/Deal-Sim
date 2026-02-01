@@ -219,6 +219,30 @@ App._renderStatement("pfTable", pf);
       </div>
     `;
   }
+function renderStatementTable(stmt){
+  const rows = (obj) => Object.entries(obj).map(([k,v]) => `
+    <tr><td>${k}</td><td>${money(v)}</td></tr>
+  `).join("");
+
+  return `
+    <div class="card" style="margin:0;">
+      <h3>Income</h3>
+      <table>
+        <tbody>${rows(stmt.income)}</tbody>
+        <tfoot><tr><th>Total Income</th><th>${money(stmt.totalIncome)}</th></tr></tfoot>
+      </table>
+
+      <h3 style="margin-top:12px;">Expenses</h3>
+      <table>
+        <tbody>${rows(stmt.expenses)}</tbody>
+        <tfoot><tr><th>Total Expenses</th><th>${money(stmt.totalExpenses)}</th></tr></tfoot>
+      </table>
+
+      <h3 style="margin-top:12px;">NOI</h3>
+      <div class="badge">${money(stmt.noi)}</div>
+    </div>
+  `;
+}
 
   return {
     renderDealFeed,
