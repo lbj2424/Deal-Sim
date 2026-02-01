@@ -1,94 +1,4 @@
 const Calc = (() => {
-  function sumObj(o){
-  return Object.values(o || {}).reduce((a,b)=>a + Number(b || 0), 0);
-}
-
-function statementFromT12(deal){
-  const inc = deal.t12?.income || {};
-  const exp = deal.t12?.expenses || {};
-
-  const totalIncome = sumObj(inc);
-  const totalExpenses = sumObj(exp);
-  const noi = totalIncome - totalExpenses;
-
-  return {
-    income: inc,
-    expenses: exp,
-    totalIncome,
-    totalExpenses,
-    noi
-  };
-}
-
-function proformaFromInputs(deal, inputs){
-  const t12 = statementFromT12(deal);
-
-  // derive "market/stabilized" GPR from in-place avg rent + rent premium
-  const baseRentMonthly = deal.avgRentInPlace; // in-place
-  const premium = Number(inputs.rentPremium || 0);
-  const rentMonthlyPF = baseRentMonthly + premium;
-
-  const gprPF =
-    deal.units * rentMonthlyPF * 12;
-
-  // Other income: start from T12 per-unit monthly and let it grow with rent growth
-  const otherIncomeT12 = (deal.t12?.income?.otherIncome || 0);
-  const otherIncomePF = otherIncomeT12 * (1 + inputs.rentGrowth);
-
-  const stabilizedOcc = deal.uw?.stabilizedOccupancy ?? 0.94;
-  const vacPF = 1 - stabilizedOcc;
-
-  const vacancyLossPF = -(gprPF * vacPF);
-
-  const concessionsPF = deal.t12?.income?.concessionsBadDebt || 0; // keep as-is for MVP
-
-  const incomePF = {
-    gpr: gprPF,
-    vacancyLoss: vacancyLossPF,
-    concessionsBadDebt: concessionsPF,
-    otherIncome: otherIncomePF
-  };
-
-  const egiPF = sumObj(incomePF);
-
-  // Expenses: grow T12 expenses by expense growth
-  const expGrowth = inputs.expGrowth;
-  const baseExp = { ...(deal.t12?.expenses || {}) };
-
-  // Remove managementFee from base; we will compute as % of EGI (more legit)
-  baseExp.managementFee = 0;
-
-  const grownExp = {};
-  for (const [k,v] of Object.entries(baseExp)){
-    grownExp[k] = Number(v || 0) * (1 + expGrowth);
-  }
-
-  // Tax + insurance step-ups (common underwriting)
-  const taxStep = deal.uw?.taxStepUpPct ?? 0.10;
-  const insStep = deal.uw?.insuranceStepUpPct ?? 0.07;
-
-  if (grownExp.propertyTaxes != null) grownExp.propertyTaxes = grownExp.propertyTaxes * (1 + taxStep);
-  if (grownExp.insurance != null) grownExp.insurance = grownExp.insurance * (1 + insStep);
-
-  // Management fee as % of EGI
-  const mgmtPct = deal.uw?.managementFeePct ?? 0.05;
-  const managementFee = -(egiPF * 0) + (egiPF * mgmtPct); // keep positive expense number
-  grownExp.managementFee = managementFee;
-
-  const totalExpensesPF = sumObj(grownExp);
-  const noiPF = egiPF - totalExpensesPF;
-
-  return {
-    income: incomePF,
-    expenses: grownExp,
-    totalIncome: egiPF,
-    totalExpenses: totalExpensesPF,
-    noi: noiPF,
-    rentMonthlyPF,
-    stabilizedOcc
-  };
-}
-
   function pmt(rateMonthly, nMonths, pv){
     if (rateMonthly === 0) return pv / nMonths;
     const r = rateMonthly;
@@ -96,7 +6,6 @@ function proformaFromInputs(deal, inputs){
   }
 
   function irr(cashflows){
-    // Newton-Raphson (simple). cashflows[0] is negative equity.
     let guess = 0.15;
     for (let iter = 0; iter < 60; iter++){
       let npv = 0, d = 0;
@@ -114,18 +23,115 @@ function proformaFromInputs(deal, inputs){
     return guess;
   }
 
+  function sumObj(o){
+    return Object.values(o || {}).reduce((a,b)=>a + Number(b || 0), 0);
+  }
+
+  // ---- Statement builders ----
+  function statementFromT12(deal){
+    const inc = deal.t12?.income || {};
+    const exp = deal.t12?.expenses || {};
+
+    const totalIncome = sumObj(inc);
+    const totalExpenses = sumObj(exp);
+    const noi = totalIncome - totalExpenses;
+
+    return { income: inc, expenses: exp, totalIncome, totalExpenses, noi };
+  }
+
+  // Pro forma updates with your inputs
+  function proformaFromInputs(deal, inputs){
+    const t12 = statementFromT12(deal);
+
+    const stabilizedOcc = deal.uw?.stabilizedOccupancy ?? 0.94;
+    const vacPF = 1 - stabilizedOcc;
+
+    // Use in-place rent + your rent premium for PF rent
+    const baseRentMonthly = Number(deal.avgRentInPlace || 0);
+    const premium = Number(inputs.rentPremium || 0);
+    const rentMonthlyPF = baseRentMonthly + premium;
+
+    const gprPF = Number(deal.units || 0) * rentMonthlyPF * 12;
+
+    // Other income: start from T12 and grow with rent growth
+    const otherIncomeT12 = Number(deal.t12?.income?.otherIncome || 0);
+    const otherIncomePF = otherIncomeT12 * (1 + inputs.rentGrowth);
+
+    const vacancyLossPF = -(gprPF * vacPF);
+    const concessionsPF = Number(deal.t12?.income?.concessionsBadDebt || 0);
+
+    const incomePF = {
+      gpr: gprPF,
+      vacancyLoss: vacancyLossPF,
+      concessionsBadDebt: concessionsPF,
+      otherIncome: otherIncomePF
+    };
+
+    const egiPF = sumObj(incomePF);
+
+    // Expenses: grow T12 expenses by expense growth
+    const expGrowth = inputs.expGrowth;
+    const baseExp = { ...(deal.t12?.expenses || {}) };
+
+    // remove mgmt fee from base; compute as % of EGI
+    baseExp.managementFee = 0;
+
+    const grownExp = {};
+    for (const [k,v] of Object.entries(baseExp)){
+      grownExp[k] = Number(v || 0) * (1 + expGrowth);
+    }
+
+    // Step-ups (legit underwriting)
+    const taxStep = deal.uw?.taxStepUpPct ?? 0.10;
+    const insStep = deal.uw?.insuranceStepUpPct ?? 0.07;
+    if (grownExp.propertyTaxes != null) grownExp.propertyTaxes = grownExp.propertyTaxes * (1 + taxStep);
+    if (grownExp.insurance != null) grownExp.insurance = grownExp.insurance * (1 + insStep);
+
+    // Management fee
+    const mgmtPct = deal.uw?.managementFeePct ?? 0.05;
+    grownExp.managementFee = egiPF * mgmtPct;
+
+    const totalExpensesPF = sumObj(grownExp);
+    const noiPF = egiPF - totalExpensesPF;
+
+    return {
+      income: incomePF,
+      expenses: grownExp,
+      totalIncome: egiPF,
+      totalExpenses: totalExpensesPF,
+      noi: noiPF,
+      stabilizedOcc,
+      rentMonthlyPF
+    };
+  }
+
+  // Better break-even occupancy using PF numbers:
+  // BE Occ ≈ (OpEx + DebtSvc) / (GPR * (1 - OpEx/EGI))
+  // We'll compute using PF "margin" (NOI / EGI) which is realistic.
+  function breakEvenOccupancy(pfStmt, debtService){
+    const gpr = Number(pfStmt.income?.gpr || 0);
+    const egi = Number(pfStmt.totalIncome || 0);
+    const noi = Number(pfStmt.noi || 0);
+    const margin = egi > 0 ? (noi / egi) : 0;
+
+    // If margin is tiny or negative, BE is basically 100%+
+    if (gpr <= 0 || margin <= 0.02) return 1.0;
+
+    // Need EGI such that NOI = EGI * margin >= debt service
+    const requiredEGI = debtService / margin;
+    // EGI = GPR * occupancy + (other items). We approximate using GPR only.
+    const occ = requiredEGI / gpr;
+    return Math.max(0, Math.min(1.25, occ));
+  }
+
+  // ---- Main simulation: Option 1 ----
+  // Year 0: equity + year1 capex upfront
+  // Year 1 NOI: T12 NOI (today)
+  // Year 2 NOI: Pro Forma NOI (updates with your assumptions)
+  // Year 3+: grow NOI by (rentGrowth - expGrowth proxy) for simplicity,
+  // but we’ll grow PF statement itself (income & expenses) each year.
   function simulate(deal, inputs){
     const hold = inputs.holdYears;
-
-    // Income in year 1 (in-place)
-    const gprYear1 =
-      deal.units * deal.avgRentInPlace * 12 +
-      deal.units * (deal.otherIncomePerUnitMonthly || 0) * 12;
-
-    const vac = inputs.vacancy;
-    const egiYear1 = gprYear1 * (1 - vac);
-    const opexYear1 = egiYear1 * deal.opexRatio;
-    const noiYear1 = egiYear1 - opexYear1;
 
     // Debt
     const ltv = inputs.ltv;
@@ -138,21 +144,14 @@ function proformaFromInputs(deal, inputs){
     const payM = pmt(rM, n, loanAmt);
     const debtServiceYear = payM * 12;
 
-    // Year 1 capex
-    const capexYear1 = deal.units * (deal.capexPerUnitYear1 || 0);
+    // Capex
+    const capexYear1 = Number(deal.units || 0) * Number(deal.capexPerUnitYear1 || 0);
 
-    // Stabilized rent premium: we apply it starting Year 2 (simple)
-    const rentPremAnnual = deal.units * (inputs.rentPremium || 0) * 12;
+    // Statements
+    const t12 = statementFromT12(deal);
+    const pf0 = proformaFromInputs(deal, inputs);
 
-    // Build yearly cashflows
-    const cfs = [];
-    cfs.push(-(equity + capexYear1)); // Year 0 equity + Year 1 capex upfront (conservative)
-
-    let noi = noiYear1;
-    let gpr = gprYear1;
-    let loanBal = loanAmt;
-
-    // amortization schedule yearly (approx: compute balance after 12 months)
+    // Amortize loan annually (approx with 12 monthly steps)
     function balanceAfter12(loanBalance){
       let bal = loanBalance;
       for (let i = 0; i < 12; i++){
@@ -163,43 +162,57 @@ function proformaFromInputs(deal, inputs){
       return bal;
     }
 
-    const expGrowth = inputs.expGrowth;
-    const rentGrowth = inputs.rentGrowth;
+    // Cashflows
+    const cfs = [];
+    cfs.push(-(equity + capexYear1));
 
-    // Compute DSCR each year + BE occupancy
     const dscrs = [];
-    const beOccs = [];
+    let loanBal = loanAmt;
+
+    // Year-by-year PF growth (we’ll grow income and expenses separately)
+    let pfIncome = { ...pf0.income };
+    let pfExpenses = { ...pf0.expenses };
 
     for (let y = 1; y <= hold; y++){
-      // Income growth
-      gpr = gpr * (1 + rentGrowth);
+      let noi;
 
-      // add stabilized premium starting year 2
-      const premium = (y >= 2) ? rentPremAnnual : 0;
+      if (y === 1){
+        // Conservative: Year 1 = T12 NOI (as-is)
+        noi = t12.noi;
+      } else if (y === 2){
+        noi = pf0.noi;
+      } else {
+        // Grow PF from prior year
+        for (const k of Object.keys(pfIncome)){
+          pfIncome[k] = Number(pfIncome[k] || 0) * (1 + inputs.rentGrowth);
+        }
+        for (const k of Object.keys(pfExpenses)){
+          // Keep management fee tied to income by recomputing later
+          if (k === "managementFee") continue;
+          pfExpenses[k] = Number(pfExpenses[k] || 0) * (1 + inputs.expGrowth);
+        }
 
-      const egi = (gpr + premium) * (1 - vac);
-      const opex = (y === 1) ? (egi * deal.opexRatio) : ( (egi * deal.opexRatio) * Math.pow(1 + expGrowth, y - 1) );
-      noi = egi - opex;
+        const egi = sumObj(pfIncome);
+        const mgmtPct = deal.uw?.managementFeePct ?? 0.05;
+        pfExpenses.managementFee = egi * mgmtPct;
 
-      // recurring capex (simple: none beyond year 1 for MVP)
-      const recurringCapex = 0;
+        noi = egi - sumObj(pfExpenses);
+      }
 
-      const cf = noi - debtServiceYear - recurringCapex;
+      const cf = noi - debtServiceYear;
       cfs.push(cf);
 
       const dscr = noi / (debtServiceYear || 1e-9);
       dscrs.push(dscr);
 
-      // Break-even occupancy approximation:
-      // Need occupancy such that NOI >= debt service. NOI = (GPR*(1-occ))* (1-opexRatio) roughly.
-      const noiMargin = (1 - deal.opexRatio);
-      const beOcc = 1 - (debtServiceYear / ((gpr + premium) * noiMargin || 1e-9));
-      beOccs.push(beOcc);
       loanBal = balanceAfter12(loanBal);
     }
 
-    // Exit: sale price based on final year NOI / exit cap
-    const exitPrice = noi / inputs.exitCap;
+    // Exit: use last stabilized NOI (we’ll use year hold NOI proxy)
+    // For exit NOI, use last year’s NOI before sale:
+    const exitNOI = (cfs.length > 1) ? (cfs[cfs.length - 1] + debtServiceYear) : pf0.noi;
+
+    const exitPrice = exitNOI / inputs.exitCap;
     const sellCosts = exitPrice * (deal.sellingCostPct || 0.02);
     const netSale = exitPrice - sellCosts - loanBal;
 
@@ -207,9 +220,11 @@ function proformaFromInputs(deal, inputs){
 
     const irrVal = irr(cfs);
     const totalDist = cfs.slice(1).reduce((a,b)=>a+b,0);
-    const eqMult = (totalDist / (equity + capexYear1 || 1e-9));
+    const eqMult = totalDist / (equity + capexYear1 || 1e-9);
 
     const avgCoC = (cfs.slice(1, 1 + hold).reduce((a,b)=>a+b,0) / hold) / (equity + capexYear1 || 1e-9);
+
+    const beOcc = breakEvenOccupancy(pf0, debtServiceYear);
 
     return {
       cashflows: cfs,
@@ -218,14 +233,20 @@ function proformaFromInputs(deal, inputs){
       avgCoC,
       minDSCR: Math.min(...dscrs),
       avgDSCR: dscrs.reduce((a,b)=>a+b,0)/dscrs.length,
-      breakEvenOccMax: Math.max(...beOccs),
+      breakEvenOccMax: beOcc,
       exitPrice,
       loanBalanceEnd: loanBal,
-      noiYear1,
-      debtServiceYear
+      noiYear1: t12.noi,
+      noiProForma: pf0.noi,
+      debtServiceYear,
+      t12,
+      proforma: pf0
     };
   }
-return { simulate, _statementFromT12: statementFromT12, _proformaFromInputs: proformaFromInputs };
 
-  return { simulate };
+  return {
+    simulate,
+    statementFromT12,
+    proformaFromInputs
+  };
 })();
