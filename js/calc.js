@@ -161,14 +161,10 @@ const split = _splitOpex(remaining, rand, profile);
   insurance
 };
 
+const mgmtPct = Number(deal.uw?.managementFeePct ?? 0.05);
+const managementFee = Math.round(Math.max(0, egi) * mgmtPct);
+expenses.managementFee = managementFee;
 
-  const mgmtPct = (deal.uw?.managementFeePct ?? 0.05);
-pfExpenses.managementFee = egi * mgmtPct;
-
-
-  // Decide whether to include mgmt fee as explicit line
-  // If you prefer to keep it in pro forma only, set to 0
-  expenses.managementFee = managementFee;
 
   // Recompute totals to ensure consistency
   const totalIncome = _sum(income);
@@ -366,8 +362,9 @@ function proformaFromInputs(deal, inputs){
 
   const egi = sumObj(pfIncome);
 
-  // ✅ THIS is where the line goes
-  pfExpenses.managementFee = egi * uw.managementFeePct;
+  const mgmtPct = Number(deal.uw?.managementFeePct ?? 0.05);
+pfExpenses.managementFee = egi * mgmtPct;
+
 
   noi = egi - sumObj(pfExpenses);
 }
