@@ -274,8 +274,23 @@ function renderMonthlyT12Table(t12m){
     document.getElementById("recalc").addEventListener("click", updateResults);
 
     let decision = null;
-    document.getElementById("btnBuy").addEventListener("click", () => decision = "BUY");
-    document.getElementById("btnPass").addEventListener("click", () => decision = "PASS");
+
+const btnBuy = document.getElementById("btnBuy");
+const btnPass = document.getElementById("btnPass");
+
+function setDecision(val){
+  decision = val;
+
+  // visual toggle
+  btnBuy.classList.toggle("active", val === "BUY");
+  btnPass.classList.toggle("active", val === "PASS");
+
+  // quick debug (remove later)
+  console.log("Decision:", decision);
+}
+
+btnBuy.addEventListener("click", () => setDecision("BUY"));
+btnPass.addEventListener("click", () => setDecision("PASS"));
 
     document.getElementById("btnReveal").addEventListener("click", () => {
       const inputs = readInputs();
