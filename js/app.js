@@ -5,50 +5,46 @@ const App = (() => {
   function money(n){
     return Number(n).toLocaleString(undefined,{style:"currency",currency:"USD",maximumFractionDigits:0});
   }
-  function titleCase(s){
-  return String(s).replace(/([A-Z])/g, " $1").replace(/^./, c => c.toUpperCase()).trim();
-}
-
-function renderStatementTable(stmt){
-  const rows = (obj) => Object.entries(obj || {}).map(([k,v]) => `
-    <tr><td>${titleCase(k)}</td><td>${money(v)}</td></tr>
-  `).join("");
-
-  return `
-    <table>
-      <tbody>${rows(stmt.income)}</tbody>
-      <tr><th>Total Income</th><th>${money(stmt.totalIncome)}</th></tr>
-    </table>
-
-    <div style="height:12px;"></div>
-
-    <table>
-      <tbody>${rows(stmt.expenses)}</tbody>
-      <tr><th>Total Expenses</th><th>${money(stmt.totalExpenses)}</th></tr>
-    </table>
-
-    <div style="height:12px;"></div>
-    <div class="row">
-      <span class="badge">NOI: ${money(stmt.noi)}</span>
-    </div>
-  `;
-}
-
   function pct(n){ return (n*100).toFixed(2) + "%"; }
   function fmt(n, digits=2){ return Number(n).toFixed(digits); }
 
+  function titleCase(s){
+    return String(s).replace(/([A-Z])/g, " $1").replace(/^./, c => c.toUpperCase()).trim();
+  }
+
+  function renderStatementTable(stmt){
+    const rows = (obj) => Object.entries(obj || {}).map(([k,v]) => `
+      <tr><td>${titleCase(k)}</td><td>${money(v)}</td></tr>
+    `).join("");
+
+    return `
+      <table>
+        <tbody>${rows(stmt.income)}</tbody>
+        <tr><th>Total Income</th><th>${money(stmt.totalIncome)}</th></tr>
+      </table>
+
+      <div style="height:12px;"></div>
+
+      <table>
+        <tbody>${rows(stmt.expenses)}</tbody>
+        <tr><th>Total Expenses</th><th>${money(stmt.totalExpenses)}</th></tr>
+      </table>
+
+      <div style="height:12px;"></div>
+      <div class="row">
+        <span class="badge">NOI: ${money(stmt.noi)}</span>
+      </div>
+    `;
+  }
+
   async function loadDeals(){
     if (DEALS.length) return DEALS;
-    const res = await fetch("data/deals.json");
+    const res = await fetch("./data/deals.json"); // safer for project pages
     DEALS = await res.json();
     return DEALS;
   }
 
   function dealCardHTML(d){
-    const inPlaceCap = (d.units * d.avgRentInPlace * 12 * (1 - d.occupancy) === 0)
-      ? null
-      : null; // we’ll keep cap out of the feed for now (less noise)
-
     const tag = d.coach?.profile?.replaceAll("_"," ") || "multifamily";
     return `
       <div class="dealCard">
@@ -87,19 +83,7 @@ function renderStatementTable(stmt){
     el.innerHTML = items.map(x => `
       <div><div class="k">${x.k}</div><div class="v">${x.v}</div></div>
     `).join("");
-    { k:"T12 NOI", v: money(res.noiYear1) },
-{ k:"Pro Forma NOI", v: money(res.noiProForma) },
-
   }
-  const t12 = Calc.statementFromT12(deal);
-const pf = Calc.proformaFromInputs(deal, inputs);
-
-const t12El = document.getElementById("t12Table");
-if (t12El) t12El.innerHTML = renderStatementTable(t12);
-
-const pfEl = document.getElementById("pfTable");
-if (pfEl) pfEl.innerHTML = renderStatementTable(pf);
-
 
   async function initDealPage(){
     const id = getQueryParam("id");
@@ -109,8 +93,7 @@ if (pfEl) pfEl.innerHTML = renderStatementTable(pf);
 
     document.getElementById("dealTitle").textContent = deal.name;
 
-    const facts = document.getElementById("dealFacts");
-    renderKV(facts, [
+    renderKV(document.getElementById("dealFacts"), [
       { k:"Units", v: deal.units },
       { k:"Purchase Price", v: money(deal.purchasePrice) },
       { k:"In-place Avg Rent", v: money(deal.avgRentInPlace) + "/mo" },
@@ -141,11 +124,16 @@ if (pfEl) pfEl.innerHTML = renderStatementTable(pf);
     function updateResults(){
       const inputs = readInputs();
       const res = Calc.simulate(deal, inputs);
-      const t12 = Calc._statementFromT12(deal);
-const pf = Calc._proformaFromInputs(deal, inputs);
 
-App._renderStatement("t12Table", t12);
-App._renderStatement("pfTable", pf);
+      // NEW: show T12 + Pro Forma tables (updates on recalc)
+      const t12 = Calc.statementFromT12(deal);
+      const pf  = Calc.proformaFromInputs(deal, inputs);
+
+      const t12El = document.getElementById("t12Table");
+      if (t12El) t12El.innerHTML = renderStatementTable(t12);
+
+      const pfEl = document.getElementById("pfTable");
+      if (pfEl) pfEl.innerHTML = renderStatementTable(pf);
 
       renderKV(document.getElementById("results"), [
         { k:"IRR", v: pct(res.irr) },
@@ -153,8 +141,11 @@ App._renderStatement("pfTable", pf);
         { k:"Avg Cash-on-Cash", v: pct(res.avgCoC) },
         { k:"Min DSCR", v: fmt(res.minDSCR, 2) },
         { k:"Worst Break-even Occ", v: Math.round(res.breakEvenOccMax*100) + "%" },
-        { k:"Exit Price", v: money(res.exitPrice) }
+        { k:"Exit Price", v: money(res.exitPrice) },
+        { k:"T12 NOI", v: money(res.noiYear1) },
+        { k:"Pro Forma NOI", v: money(res.noiProForma) }
       ]);
+
       return res;
     }
 
@@ -167,11 +158,10 @@ App._renderStatement("pfTable", pf);
 
     document.getElementById("btnReveal").addEventListener("click", () => {
       const inputs = readInputs();
-      const base = updateResults();
+      updateResults();
 
       const review = Coach.review(deal, inputs);
 
-      // Save decision row
       Storage.saveDecision({
         ts: new Date().toISOString(),
         dealId: deal.id,
@@ -186,7 +176,6 @@ App._renderStatement("pfTable", pf);
         confidence: Number(document.getElementById("confidence").value || 3)
       });
 
-      // Render coach output
       const el = document.getElementById("coachOut");
       const flags = review.flags.map(f => `<span class="badge">${f.replaceAll("_"," ")}</span>`).join(" ");
       const truths = review.dealTruths.map(t => `<li>${t}</li>`).join("");
@@ -260,37 +249,6 @@ App._renderStatement("pfTable", pf);
       </div>
     `;
   }
-function renderStatementTable(stmt){
-  const rows = (obj) => Object.entries(obj).map(([k,v]) => `
-    <tr><td>${k}</td><td>${money(v)}</td></tr>
-  `).join("");
-
-  return `
-    <div class="card" style="margin:0;">
-      <h3>Income</h3>
-      <table>
-        <tbody>${rows(stmt.income)}</tbody>
-        <tfoot><tr><th>Total Income</th><th>${money(stmt.totalIncome)}</th></tr></tfoot>
-      </table>
-
-      <h3 style="margin-top:12px;">Expenses</h3>
-      <table>
-        <tbody>${rows(stmt.expenses)}</tbody>
-        <tfoot><tr><th>Total Expenses</th><th>${money(stmt.totalExpenses)}</th></tr></tfoot>
-      </table>
-
-      <h3 style="margin-top:12px;">NOI</h3>
-      <div class="badge">${money(stmt.noi)}</div>
-    </div>
-  `;
-}
-  function _renderStatement(id, stmt){
-  const el = document.getElementById(id);
-  if (!el) return;
-  el.innerHTML = renderStatementTable(stmt);
-}
-return { renderDealFeed, initDealPage, renderTrackRecord, addGeneratedDealToFeed, _renderStatement };
-
 
   return {
     renderDealFeed,
