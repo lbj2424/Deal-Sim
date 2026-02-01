@@ -100,6 +100,12 @@ const App = (() => {
     function updateResults(){
       const inputs = readInputs();
       const res = Calc.simulate(deal, inputs);
+      const t12 = Calc._statementFromT12(deal);
+const pf = Calc._proformaFromInputs(deal, inputs);
+
+App._renderStatement("t12Table", t12);
+App._renderStatement("pfTable", pf);
+
       renderKV(document.getElementById("results"), [
         { k:"IRR", v: pct(res.irr) },
         { k:"Equity Multiple", v: fmt(res.equityMultiple, 2) + "x" },
