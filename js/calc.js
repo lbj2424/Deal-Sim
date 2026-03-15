@@ -208,8 +208,9 @@ function proformaFromInputs(deal, inputs){
 };
 
 
-  const stabilizedOcc = uw.stabilizedOccupancy;
-  const vacPF = 1 - stabilizedOcc;
+  // Use user's vacancy input so Pro Forma reflects their assumption
+  const vacPF = Number(inputs.vacancy || 0);
+  const stabilizedOcc = 1 - vacPF;
 
   // Use in-place rent + your rent premium for PF rent
   const baseRentMonthly = Number(deal.avgRentInPlace || 0);
@@ -336,38 +337,43 @@ function proformaFromInputs(deal, inputs){
     const dscrs = [];
     let loanBal = loanAmt;
 
-    // Year-by-year PF growth (we’ll grow income and expenses separately)
-    let pfIncome = { ...pf0.income };
-    let pfExpenses = { ...pf0.expenses };
+    // Year-by-year growth seeded from T12 (avoids abrupt Pro Forma jump at Year 2)
+    let growthIncome = { ...t12.income };
+    let growthExpenses = { ...t12.expenses };
+    growthExpenses.managementFee = 0; // recompute from EGI each year
 
     for (let y = 1; y <= hold; y++){
       let noi;
 
       if (y === 1){
-        // Conservative: Year 1 = T12 NOI (as-is)
+        // Year 1: as-is (T12 performance)
         noi = t12.noi;
-      } else if (y === 2){
-        noi = pf0.noi;
-     } else {
-  // Grow PF from prior year
-  for (const k of Object.keys(pfIncome)){
-    pfIncome[k] = Number(pfIncome[k] || 0) * (1 + inputs.rentGrowth);
-  }
+      } else {
+        // Grow all income lines by rentGrowth
+        for (const k of Object.keys(growthIncome)){
+          growthIncome[k] = Number(growthIncome[k] || 0) * (1 + inputs.rentGrowth);
+        }
 
-  for (const k of Object.keys(pfExpenses)){
-    // Keep management fee tied to income by recomputing later
-    if (k === "managementFee") continue;
-    pfExpenses[k] = Number(pfExpenses[k] || 0) * (1 + inputs.expGrowth);
-  }
+        // Year 2: apply rent premium (value-add stabilization) and user vacancy rate
+        if (y === 2){
+          const premiumAnnual = inputs.rentPremium * 12 * Number(deal.units || 0);
+          growthIncome.gpr = (growthIncome.gpr || 0) + premiumAnnual;
+          // Recalculate vacancy on the updated GPR at user’s vacancy rate
+          growthIncome.vacancyLoss = -Math.round(growthIncome.gpr * inputs.vacancy);
+        }
 
-  const egi = sumObj(pfIncome);
+        // Grow expense lines by expGrowth (skip mgmt fee — recomputed below)
+        for (const k of Object.keys(growthExpenses)){
+          if (k === "managementFee") continue;
+          growthExpenses[k] = Number(growthExpenses[k] || 0) * (1 + inputs.expGrowth);
+        }
 
-  const mgmtPct = Number(deal.uw?.managementFeePct ?? 0.05);
-pfExpenses.managementFee = egi * mgmtPct;
+        const egi = sumObj(growthIncome);
+        const mgmtPct = Number(deal.uw?.managementFeePct ?? 0.05);
+        growthExpenses.managementFee = Math.max(0, egi) * mgmtPct;
 
-
-  noi = egi - sumObj(pfExpenses);
-}
+        noi = egi - sumObj(growthExpenses);
+      }
 
 
       const cf = noi - debtServiceYear;
@@ -418,6 +424,7 @@ pfExpenses.managementFee = egi * mgmtPct;
   return {
     simulate,
     statementFromT12,
-    proformaFromInputs
+    proformaFromInputs,
+    irr   // exposed so the waterfall can compute LP/GP IRR independently
   };
 })();

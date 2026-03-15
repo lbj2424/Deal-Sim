@@ -18,6 +18,11 @@ nav a { margin-left: 12px; }
 .btn { background:#2d7dff; color:white; border:0; padding: 10px 12px; border-radius: 12px; cursor:pointer; font-weight: 650; }
 .btn.secondary { background:#1b2636; border: 1px solid #233244; }
 .btn:active { transform: translateY(1px); }
+.btn.active { outline: 2px solid #fff; }
+
+#inputWarnings { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
+.warn-error { background: #3a1010; border: 1px solid #a33; border-radius: 8px; padding: 8px 12px; font-size: 13px; color: #ff9090; }
+.warn-warning { background: #2a2010; border: 1px solid #775; border-radius: 8px; padding: 8px 12px; font-size: 13px; color: #f0d080; }
 .row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
 
 .twoCol { display:grid; grid-template-columns: 1fr 1fr; gap: 14px; }
@@ -44,4 +49,110 @@ th, td { white-space: nowrap; }
   outline: 2px solid rgba(59,130,246,0.8);
 }
 
+/* Input color coding */
+input.input-ok   { border-color: #3a8a50; box-shadow: 0 0 0 1px #3a8a50; }
+input.input-warn { border-color: #8a7030; box-shadow: 0 0 0 1px #8a7030; }
+input.input-bad  { border-color: #8a2020; box-shadow: 0 0 0 1px #8a2020; }
 
+/* Thesis grid */
+.thesisGrid { display:grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+.thesisGrid label { display:flex; flex-direction:column; gap: 6px; font-size: 13px; color:#cfe0f6; }
+.thesisGrid input { width: 100%; box-sizing: border-box; }
+.fieldHint { color:#9fb0c6; font-size:11px; font-weight:400; }
+
+/* Sensitivity table */
+.sensTable { border-collapse: collapse; font-size: 13px; }
+.sensTable th, .sensTable td { padding: 8px 14px; text-align: center; border: 1px solid #1e2e40; }
+.sensTable thead th { background: #0c1320; color: #cfe0f6; }
+.sensTable th { background: #0c1320; color: #cfe0f6; }
+.sensTable th.sens-highlight { color: #b7d6ff; border-bottom: 2px solid #4080ff; }
+
+/* Track record — insight callout cards */
+.insightCard { border-color: #2d4a7a; background: #0a1428; }
+.insightCard h3 { color: #b7d6ff; margin-top: 0; }
+.insightNote  { font-size: 13px; color: #cfe0f6; line-height: 1.6; margin: 8px 0; }
+.insightWarning {
+  font-size: 13px;
+  color: #e0c860;
+  background: #1e1a08;
+  border: 1px solid #5a5020;
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin: 8px 0 0;
+  line-height: 1.6;
+}
+
+/* Recommendation color in reveal */
+.rec-buy        { color: #6fe0a0; font-weight: 700; }
+.rec-borderline { color: #e0c860; font-weight: 700; }
+.rec-pass       { color: #e07070; font-weight: 700; }
+
+/* Market narrative in deal facts */
+.marketNarrative {
+  grid-column: 1 / -1;
+  margin-top: 10px;
+  padding: 10px 14px;
+  background: #0b1520;
+  border-left: 3px solid #2d7dff;
+  border-radius: 0 8px 8px 0;
+  font-size: 13px;
+  color: #9fb0c6;
+  line-height: 1.5;
+}
+
+/* Deal sketch card */
+.sketchFacts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 18px;
+}
+.sketchFact {
+  background: #0b1520;
+  border: 1px solid #233244;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 14px;
+  font-weight: 600;
+}
+.sketchFactLabel { font-weight: 400; color: #9fb0c6; font-size: 12px; }
+
+.sketchGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+.sketchQuestion { display: flex; flex-direction: column; gap: 8px; }
+.sketchLabel { font-size: 13px; color: #cfe0f6; font-weight: 600; }
+.sketchOptions { display: flex; flex-direction: column; gap: 6px; }
+.sketchOptions label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #9fb0c6;
+  cursor: pointer;
+}
+.sketchOptions label:hover { color: #e8eef6; }
+
+.sketchSummary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 0;
+}
+
+/* Thesis feedback rows */
+.thesisFbList { display: flex; flex-direction: column; gap: 8px; margin: 10px 0; }
+.thesisFbRow { border-radius: 0 8px 8px 0; padding: 10px 14px; }
+.thesisFbField { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px; }
+.thesisFbNote { font-size: 13px; color: #cfe0f6; line-height: 1.5; }
+
+/* Waterfall output grid */
+.wfGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+@media (max-width: 700px){ .wfGrid { grid-template-columns: 1fr; } }
+.wfSide { border: 1px solid #233244; border-radius: 12px; padding: 14px; background: #0b0f14; }
+.wfLabel { font-size: 12px; font-weight: 700; color: #9fb0c6; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 10px; }
+.wfKV { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.wfKV > div { border: 1px solid #1e2e40; border-radius: 8px; padding: 8px 10px; background: #0c1320; }

@@ -11,6 +11,14 @@
     "capexPerUnitYear1": 9000,
     "sellingCostPct": 0.02,
     "defaultDebt": { "ltv": 0.7, "rate": 0.0725, "amortYears": 30 },
+    "market": {
+      "name": "Utah County, UT",
+      "avgMarketRent": 1600,
+      "capRateRange": "5.75% – 6.50%",
+      "vacancyRate": "4.8%",
+      "rentGrowthTrend": "2.5%",
+      "narrative": "Utah County continues steady population growth driven by tech sector expansion. Rents have moderated from their 2021-22 peaks but fundamentals remain sound. In-place rents of $1,450 are ~9% below the market average, signaling real rent lift opportunity."
+    },
     "coach": {
       "profile": "classic_value_add",
       "reasonable": {
@@ -22,8 +30,9 @@
       },
       "knownFlags": ["tax_reassessment_likely"],
       "dealTruths": [
-        "Value is created primarily through rent lift and operations, not cap compression.",
-        "Exit cap sensitivity is a key swing factor."
+        "Value is created primarily through rent lift and operations, not cap rate compression.",
+        "Exit cap sensitivity is the key swing factor — stress test at +100bps before committing.",
+        "Small unit count means property management costs are relatively high on a per-unit basis."
       ]
     }
   },
@@ -39,6 +48,14 @@
     "capexPerUnitYear1": 1200,
     "sellingCostPct": 0.02,
     "defaultDebt": { "ltv": 0.65, "rate": 0.069, "amortYears": 30 },
+    "market": {
+      "name": "East Valley, AZ (Mesa / Gilbert)",
+      "avgMarketRent": 1750,
+      "capRateRange": "5.25% – 6.25%",
+      "vacancyRate": "6.2%",
+      "rentGrowthTrend": "2.0%",
+      "narrative": "Phoenix metro has absorbed significant new supply which has pushed vacancy up from historic lows. Rent growth has moderated to low single digits. Cap rates have expanded 50-75bps from their 2021 lows. This is a stabilized asset in a competitive submarket — returns come from durable occupancy, not a renovation story."
+    },
     "coach": {
       "profile": "yield_stable",
       "reasonable": {
@@ -50,8 +67,9 @@
       },
       "knownFlags": [],
       "dealTruths": [
-        "This is a yield deal: returns come from stability and modest growth.",
-        "Overpaying or aggressive exit assumptions will break the deal."
+        "This is a yield deal: returns come from stability and modest growth, not rent lift.",
+        "Overpaying for the basis or assuming aggressive exit cap assumptions will break the deal.",
+        "High occupancy at entry leaves limited room for occupancy upside — underwrite it flat."
       ]
     }
   },
@@ -67,6 +85,14 @@
     "capexPerUnitYear1": 14500,
     "sellingCostPct": 0.02,
     "defaultDebt": { "ltv": 0.7, "rate": 0.075, "amortYears": 30 },
+    "market": {
+      "name": "Albuquerque, NM",
+      "avgMarketRent": 1380,
+      "capRateRange": "6.00% – 7.25%",
+      "vacancyRate": "6.8%",
+      "rentGrowthTrend": "2.2%",
+      "narrative": "Albuquerque is a secondary workforce market with limited new supply but also limited employment growth. Heavy-lift deals here require strong operational execution — the workforce tenant base creates real collections risk, and cost overruns on capex can quickly consume your return cushion."
+    },
     "coach": {
       "profile": "heavy_lift",
       "reasonable": {
@@ -78,8 +104,9 @@
       },
       "knownFlags": ["capex_execution_risk"],
       "dealTruths": [
-        "Execution and occupancy stabilization are the entire thesis.",
-        "Conservative underwriting is mandatory; downside shows up quickly."
+        "Execution and occupancy stabilization are the entire thesis — the model is only as good as your ops.",
+        "Conservative underwriting is mandatory on heavy-lift; downside shows up fast when capex runs over.",
+        "In-place rent of $1,225 is about 11% below market — the rent lift is real, but only if you execute."
       ]
     }
   },
@@ -95,6 +122,14 @@
     "capexPerUnitYear1": 6500,
     "sellingCostPct": 0.02,
     "defaultDebt": { "ltv": 0.7, "rate": 0.071, "amortYears": 30 },
+    "market": {
+      "name": "Denver Metro Suburbs, CO",
+      "avgMarketRent": 1975,
+      "capRateRange": "5.25% – 6.50%",
+      "vacancyRate": "7.1%",
+      "rentGrowthTrend": "2.3%",
+      "narrative": "Denver suburbs have seen vacancy tick up as record new supply deliveries hit the market. Rent growth is positive but muted. Property taxes continue to rise as county assessments catch up to elevated purchase prices — budget a step-up in Year 1 underwriting."
+    },
     "coach": {
       "profile": "classic_value_add",
       "reasonable": {
@@ -106,8 +141,9 @@
       },
       "knownFlags": ["property_tax_growth_risk"],
       "dealTruths": [
-        "This can work with a realistic rent lift and stable DSCR.",
-        "Don’t force returns with aggressive exit cap assumptions."
+        "This can work with a realistic rent lift and stable DSCR, but don't force returns with aggressive exit cap assumptions.",
+        "In-place rent of $1,850 is about 6% below market average — modest lift is achievable with light renovation.",
+        "Denver suburban vacancy is elevated — underwrite to current market vacancy, not 2021 tights."
       ]
     }
   },
@@ -123,6 +159,14 @@
     "capexPerUnitYear1": 3000,
     "sellingCostPct": 0.02,
     "defaultDebt": { "ltv": 0.65, "rate": 0.0675, "amortYears": 30 },
+    "market": {
+      "name": "Kansas City, MO",
+      "avgMarketRent": 1240,
+      "capRateRange": "5.75% – 6.75%",
+      "vacancyRate": "5.5%",
+      "rentGrowthTrend": "2.8%",
+      "narrative": "Kansas City is a stable Midwest market with consistent occupancy and moderate rent growth. New supply is limited. In-place rents are close to market — this is not a rent-lift story. Returns come from operational efficiency, durable occupancy, and modest NOI growth over a full hold."
+    },
     "coach": {
       "profile": "yield_stable",
       "reasonable": {
@@ -134,8 +178,9 @@
       },
       "knownFlags": [],
       "dealTruths": [
-        "This is about durable occupancy and moderate rent growth.",
-        "Upside exists, but it’s not a renovation story."
+        "This is about durable occupancy and moderate rent growth — not a renovation story.",
+        "At 180 units, institutional buyers are potential exit counterparties. Keep operating costs lean.",
+        "Upside exists in ancillary income and operational efficiency, not rent premium."
       ]
     }
   },
@@ -151,6 +196,14 @@
     "capexPerUnitYear1": 8500,
     "sellingCostPct": 0.02,
     "defaultDebt": { "ltv": 0.7, "rate": 0.073, "amortYears": 30 },
+    "market": {
+      "name": "Salt Lake Valley Fringe, UT",
+      "avgMarketRent": 1725,
+      "capRateRange": "5.75% – 6.75%",
+      "vacancyRate": "5.3%",
+      "rentGrowthTrend": "2.7%",
+      "narrative": "Salt Lake fringe submarkets attract workforce tenants priced out of the core SLC market. Collections risk is real in this tenant demographic. At $1,550 vs. market of $1,725, there is legitimate rent lift here — but operational improvement must come first."
+    },
     "coach": {
       "profile": "classic_value_add",
       "reasonable": {
@@ -162,8 +215,233 @@
       },
       "knownFlags": ["collections_risk"],
       "dealTruths": [
-        "Operations matter: vacancy and expenses are the main risks.",
-        "Underwrite conservatively; don’t assume perfect stabilization."
+        "Operations matter most: vacancy and collections are the main risks, not capex.",
+        "Underwrite conservatively on occupancy recovery — don't assume 95% stabilization in Year 2.",
+        "The rent lift opportunity is real but requires stabilizing the asset first."
+      ]
+    }
+  },
+  {
+    "id": "mf_007",
+    "name": "60-Unit Workforce Stabilized – Atlanta, GA",
+    "units": 60,
+    "avgRentInPlace": 1350,
+    "otherIncomePerUnitMonthly": 30,
+    "occupancy": 0.95,
+    "opexRatio": 0.47,
+    "purchasePrice": 8650000,
+    "capexPerUnitYear1": 1800,
+    "sellingCostPct": 0.02,
+    "defaultDebt": { "ltv": 0.65, "rate": 0.069, "amortYears": 30 },
+    "market": {
+      "name": "Atlanta Metro, GA",
+      "avgMarketRent": 1480,
+      "capRateRange": "5.50% – 6.50%",
+      "vacancyRate": "6.5%",
+      "rentGrowthTrend": "3.0%",
+      "narrative": "Atlanta is a high-growth Sunbelt market but significant new supply has pushed vacancy up across all submarkets. Workforce housing has held up better than Class A — strong in-migration from higher-cost metros continues. In-place rents of $1,350 are ~9% below the submarket average."
+    },
+    "coach": {
+      "profile": "yield_stable",
+      "reasonable": {
+        "rentGrowthMin": 0.02,
+        "rentGrowthMax": 0.035,
+        "exitCapMin": 0.055,
+        "exitCapMax": 0.065,
+        "rentPremiumCeilingPerUnit": 100
+      },
+      "knownFlags": [],
+      "dealTruths": [
+        "This is a yield-stability deal — DSCR is the headline metric, not rent lift.",
+        "Atlanta submarket vacancy is running elevated; don't underwrite occupancy above current in-place.",
+        "At 65% LTV the debt coverage is thin — any occupancy slip creates negative leverage quickly."
+      ]
+    }
+  },
+  {
+    "id": "mf_008",
+    "name": "18-Unit Value Add – Nashville, TN",
+    "units": 18,
+    "avgRentInPlace": 1650,
+    "otherIncomePerUnitMonthly": 40,
+    "occupancy": 0.91,
+    "opexRatio": 0.43,
+    "purchasePrice": 3600000,
+    "capexPerUnitYear1": 11000,
+    "sellingCostPct": 0.02,
+    "defaultDebt": { "ltv": 0.70, "rate": 0.0725, "amortYears": 30 },
+    "market": {
+      "name": "Nashville, TN",
+      "avgMarketRent": 1920,
+      "capRateRange": "5.00% – 6.00%",
+      "vacancyRate": "6.8%",
+      "rentGrowthTrend": "3.2%",
+      "narrative": "Nashville remains a top-tier migration destination with strong employment growth. Cap rates are compressed relative to most Sunbelt markets, meaning you're paying for the growth story upfront. In-place rents of $1,650 are ~14% below market — a credible rent lift opportunity, but the basis is expensive."
+    },
+    "coach": {
+      "profile": "classic_value_add",
+      "reasonable": {
+        "rentGrowthMin": 0.022,
+        "rentGrowthMax": 0.038,
+        "exitCapMin": 0.055,
+        "exitCapMax": 0.065,
+        "rentPremiumCeilingPerUnit": 240
+      },
+      "knownFlags": ["expensive_basis"],
+      "dealTruths": [
+        "The rent lift is real but you're paying for it at entry — basis discipline matters.",
+        "Year 1 is a cash-flow-negative year given renovation + low in-place NOI. You need bridge or cash reserves.",
+        "Pull market comps on renovated units before committing — the $200+/unit premium must be demonstrated, not assumed."
+      ]
+    }
+  },
+  {
+    "id": "mf_009",
+    "name": "72-Unit Distressed – Memphis, TN",
+    "units": 72,
+    "avgRentInPlace": 975,
+    "otherIncomePerUnitMonthly": 20,
+    "occupancy": 0.82,
+    "opexRatio": 0.55,
+    "purchasePrice": 5400000,
+    "capexPerUnitYear1": 17500,
+    "sellingCostPct": 0.02,
+    "defaultDebt": { "ltv": 0.70, "rate": 0.075, "amortYears": 30 },
+    "market": {
+      "name": "Memphis, TN",
+      "avgMarketRent": 1150,
+      "capRateRange": "6.00% – 7.50%",
+      "vacancyRate": "8.5%",
+      "rentGrowthTrend": "1.8%",
+      "narrative": "Memphis is a soft workforce market with elevated crime in certain submarkets, slow rent growth, and historically challenging collections. While cap rates appear attractive, investors frequently underestimate total capex and lease-up timelines. This is one of the most execution-dependent markets in the Southeast."
+    },
+    "coach": {
+      "profile": "heavy_lift",
+      "reasonable": {
+        "rentGrowthMin": 0.015,
+        "rentGrowthMax": 0.025,
+        "exitCapMin": 0.0625,
+        "exitCapMax": 0.075,
+        "rentPremiumCeilingPerUnit": 150
+      },
+      "knownFlags": ["capex_execution_risk", "crime_area_risk", "collections_risk"],
+      "dealTruths": [
+        "This deal requires near-perfect execution to pencil — one cost overrun or lease-up delay destroys the return.",
+        "Memphis investors historically underestimate total capex and vacancy duration. Budget 20-30% over your first capex estimate.",
+        "Distressed for a reason: ask why the previous owner failed to stabilize and whether those conditions still exist.",
+        "With opex at 55% of EGI, there is almost no margin for error on NOI. DSCR in Year 1 barely covers."
+      ]
+    }
+  },
+  {
+    "id": "mf_010",
+    "name": "30-Unit Class B+ Value Add – Charlotte, NC",
+    "units": 30,
+    "avgRentInPlace": 1750,
+    "otherIncomePerUnitMonthly": 45,
+    "occupancy": 0.94,
+    "opexRatio": 0.42,
+    "purchasePrice": 6050000,
+    "capexPerUnitYear1": 8000,
+    "sellingCostPct": 0.02,
+    "defaultDebt": { "ltv": 0.70, "rate": 0.071, "amortYears": 30 },
+    "market": {
+      "name": "Charlotte, NC",
+      "avgMarketRent": 1950,
+      "capRateRange": "5.25% – 6.00%",
+      "vacancyRate": "5.8%",
+      "rentGrowthTrend": "3.0%",
+      "narrative": "Charlotte is a fast-growing Southeast market with strong financial sector employment. Cap rates are compressed and getting buyers to transact at reasonable prices is competitive. In-place rents of $1,750 are about 10% below market — a legitimate rent-lift story, but comps must be verified before underwriting a premium."
+    },
+    "coach": {
+      "profile": "classic_value_add",
+      "reasonable": {
+        "rentGrowthMin": 0.022,
+        "rentGrowthMax": 0.035,
+        "exitCapMin": 0.0525,
+        "exitCapMax": 0.06,
+        "rentPremiumCeilingPerUnit": 175
+      },
+      "knownFlags": ["property_tax_growth_risk"],
+      "dealTruths": [
+        "Return requires rent comps to justify the premium — pull actuals from renovated comps before committing.",
+        "Cap rate compression is not a safe base case in Charlotte today; underwrite exit at entry cap or wider.",
+        "DSCR at this basis is tight in Year 1 — ensure your Year 1 cash flow covers if rent premium comes in late."
+      ]
+    }
+  },
+  {
+    "id": "mf_011",
+    "name": "144-Unit Value Add – Tampa, FL",
+    "units": 144,
+    "avgRentInPlace": 1575,
+    "otherIncomePerUnitMonthly": 45,
+    "occupancy": 0.93,
+    "opexRatio": 0.48,
+    "purchasePrice": 24200000,
+    "capexPerUnitYear1": 6000,
+    "sellingCostPct": 0.02,
+    "defaultDebt": { "ltv": 0.65, "rate": 0.070, "amortYears": 30 },
+    "market": {
+      "name": "Tampa Bay, FL",
+      "avgMarketRent": 1800,
+      "capRateRange": "5.50% – 6.50%",
+      "vacancyRate": "7.2%",
+      "rentGrowthTrend": "2.5%",
+      "narrative": "Tampa Bay is a top-tier Florida market with strong migration tailwinds. However, property insurance costs have doubled or tripled since 2021, fundamentally changing the operating expense structure for all Florida multifamily. Any deal that uses pre-2022 insurance figures in the T12 is showing an artificially low expense base."
+    },
+    "coach": {
+      "profile": "classic_value_add",
+      "reasonable": {
+        "rentGrowthMin": 0.02,
+        "rentGrowthMax": 0.035,
+        "exitCapMin": 0.055,
+        "exitCapMax": 0.065,
+        "rentPremiumCeilingPerUnit": 190
+      },
+      "knownFlags": ["insurance_cost_surge", "coastal_risk"],
+      "dealTruths": [
+        "Florida insurance has surged 2-3x since 2021 — verify the T12 insurance line is at current market rates, not historical.",
+        "If insurance is understated in T12, the true NOI (and therefore entry cap rate) is lower than it appears.",
+        "At 144 units this becomes an institutional-grade exit at stabilization — buy-side brokers will stress-test your insurance line."
+      ]
+    }
+  },
+  {
+    "id": "mf_012",
+    "name": "24-Unit Post-Boom Correction – Boise, ID",
+    "units": 24,
+    "avgRentInPlace": 1700,
+    "otherIncomePerUnitMonthly": 30,
+    "occupancy": 0.88,
+    "opexRatio": 0.45,
+    "purchasePrice": 4400000,
+    "capexPerUnitYear1": 7500,
+    "sellingCostPct": 0.02,
+    "defaultDebt": { "ltv": 0.70, "rate": 0.0725, "amortYears": 30 },
+    "market": {
+      "name": "Treasure Valley, ID (Boise)",
+      "avgMarketRent": 1730,
+      "capRateRange": "5.50% – 6.50%",
+      "vacancyRate": "7.8%",
+      "rentGrowthTrend": "0.5%",
+      "narrative": "Boise experienced 25-35% rent growth in 2021-22, followed by a correction in 2023-24 as elevated new supply and softening demand pushed vacancy up. Current in-place rents are near market average — the classic 'value add' rent lift story is weak here. Underwrite flat rent growth for Years 1-2 before assuming a recovery."
+    },
+    "coach": {
+      "profile": "classic_value_add",
+      "reasonable": {
+        "rentGrowthMin": 0.005,
+        "rentGrowthMax": 0.022,
+        "exitCapMin": 0.056,
+        "exitCapMax": 0.068,
+        "rentPremiumCeilingPerUnit": 60
+      },
+      "knownFlags": ["market_correction_risk", "soft_demand"],
+      "dealTruths": [
+        "In-place rent of $1,700 is only $30 below market — the rent lift story is essentially gone.",
+        "Boise is a correction market. Underwrite 0-1% rent growth for Years 1-2, not historical trend rates.",
+        "Occupancy at 88% is soft demand, not a mismanagement story — you cannot renovate your way to 95% if the market is at 92%.",
+        "The thesis here, if any, is basis and NOI growth from expense discipline — not rent premium."
       ]
     }
   }

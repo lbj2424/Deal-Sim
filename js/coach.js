@@ -165,5 +165,141 @@ const Coach = (() => {
     };
   }
 
-  return { review };
+  // Map known flag IDs to keywords to look for in a thesis
+  const FLAG_KEYWORDS = {
+    tax_reassessment_likely:   ["tax", "reassess", "assessed value"],
+    capex_execution_risk:      ["capex", "construction", "execution", "contractor", "cost over", "renovation risk"],
+    collections_risk:          ["collection", "delinquency", "tenant quality", "eviction", "payment"],
+    insurance_cost_surge:      ["insurance", "insur"],
+    crime_area_risk:           ["crime", "safety", "neighborhood", "submarket risk"],
+    property_tax_growth_risk:  ["property tax", "tax growth", "reassess"],
+    market_correction_risk:    ["correction", "softening", "supply", "oversupply", "new delivery"],
+    expensive_basis:           ["basis", "overpay", "price", "expensive"],
+    soft_demand:               ["demand", "vacancy", "absorption", "softening"],
+    coastal_risk:              ["hurricane", "flood", "coastal", "storm"],
+  };
+
+  function evaluateThesis(deal, inputs, thesis){
+    const { thesisWhat, thesisWhy, thesisExit, thesisKiller } = thesis;
+    const r      = deal.coach?.reasonable;
+    const profile= deal.coach?.profile;
+    const flags  = deal.coach?.knownFlags || [];
+    const fb     = []; // feedback array: { field, type, note }
+    // type: 'aligned' | 'gap' | 'conflict' | 'missing'
+
+    // ── THESIS: WHY IT PENCILS ───────────────────────────────────────────────
+    if (!thesisWhy){
+      fb.push({ field:"Why it pencils", type:"missing",
+        note:"No upside thesis written. This is the most important field — what specifically makes this deal worth buying at this price?"
+      });
+    } else {
+      const why = thesisWhy.toLowerCase();
+      const mentionsLift = /rent.lift|premium|reno|rehab|value.?add|upgrade|unit.improv/i.test(why);
+      const mentionsCompression = /cap.compress|cap.rate.compres|compression/i.test(why);
+      const mentionsOps = /mis.manag|operational|expense.reduc|management.improv/i.test(why);
+
+      if (mentionsLift && r){
+        const applied = inputs.rentPremium || 0;
+        const ceiling = r.rentPremiumCeilingPerUnit;
+        if (applied < ceiling * 0.40){
+          fb.push({ field:"Why it pencils", type:"gap",
+            note:`You cited rent lift but only modeled $${applied}/unit — the deal's ceiling is $${ceiling}/unit. Either you're being very conservative (own that) or your model undersells your own thesis.`
+          });
+        } else if (applied > ceiling){
+          fb.push({ field:"Why it pencils", type:"conflict",
+            note:`Rent lift thesis but $${applied}/unit exceeds the deal's realistic ceiling of $${ceiling}/unit. Your model is likely overstating the upside.`
+          });
+        } else {
+          fb.push({ field:"Why it pencils", type:"aligned",
+            note:`Rent lift thesis ($${applied}/unit) is consistent with your model and within the deal's supportable range. Good.`
+          });
+        }
+      }
+
+      if (mentionsCompression && r){
+        if (inputs.exitCap < r.exitCapMin){
+          fb.push({ field:"Why it pencils", type:"conflict",
+            note:`You're relying on cap rate compression (exit cap ${(inputs.exitCap*100).toFixed(2)}% vs. reasonable min ${(r.exitCapMin*100).toFixed(2)}%). This is an aggressive assumption that must be backed by market data.`
+          });
+        } else {
+          fb.push({ field:"Why it pencils", type:"gap",
+            note:`You mentioned cap rate compression but your exit cap of ${(inputs.exitCap*100).toFixed(2)}% is within the normal range — either refine your thesis or your model underreflects it.`
+          });
+        }
+      }
+
+      if (profile === "yield_stable" && mentionsLift && (inputs.rentPremium||0) > 100){
+        fb.push({ field:"Why it pencils", type:"conflict",
+          note:`This is a yield-stable deal, but your thesis is a rent-lift story. Yield deals return via durable occupancy and modest NOI growth — not renovation premium. Verify the lift is truly achievable.`
+        });
+      }
+
+      if (!mentionsLift && !mentionsCompression && !mentionsOps){
+        fb.push({ field:"Why it pencils", type:"gap",
+          note:`Your thesis doesn't clearly name a specific return driver (rent lift, cap compression, or operational improvement). Be explicit — what is the mechanism that creates value?`
+        });
+      }
+    }
+
+    // ── THESIS: EXIT PATH ────────────────────────────────────────────────────
+    if (!thesisExit){
+      fb.push({ field:"Exit path", type:"missing",
+        note:`No exit path written. Who is the buyer? What cap rate do they pay? Your answer should match your model's exit cap of ${(inputs.exitCap*100).toFixed(2)}%.`
+      });
+    } else {
+      const capMatch = thesisExit.match(/(\d+\.?\d*)\s*%/);
+      if (capMatch && r){
+        const mentionedCap = parseFloat(capMatch[1]) / 100;
+        const delta = Math.abs(mentionedCap - inputs.exitCap);
+        if (delta > 0.005){
+          fb.push({ field:"Exit path", type:"conflict",
+            note:`You wrote ${(mentionedCap*100).toFixed(2)}% in your exit path but your model uses ${(inputs.exitCap*100).toFixed(2)}%. Align your written thesis with your model assumption.`
+          });
+        } else {
+          fb.push({ field:"Exit path", type:"aligned",
+            note:`Exit cap in your thesis (${(mentionedCap*100).toFixed(2)}%) matches your model. Good alignment.`
+          });
+        }
+      } else {
+        fb.push({ field:"Exit path", type:"aligned",
+          note:`Exit path documented. Confirm the buyer type and timing match your model's exit cap of ${(inputs.exitCap*100).toFixed(2)}%.`
+        });
+      }
+    }
+
+    // ── THESIS: DEAL KILLER ──────────────────────────────────────────────────
+    if (!thesisKiller){
+      fb.push({ field:"Deal killer", type:"missing",
+        note:"No deal killer identified. Every deal has a most-lethal scenario — what single thing blows up the return?"
+      });
+    } else {
+      const killer = thesisKiller.toLowerCase();
+      if (flags.length === 0){
+        fb.push({ field:"Deal killer", type:"aligned",
+          note:"No pre-flagged known risks on this deal. Your stated killer is your own assessment — make sure it's the most lethal scenario, not a generic placeholder."
+        });
+      } else {
+        const identified = flags.filter(f => {
+          const kws = FLAG_KEYWORDS[f] || [f.replaceAll("_"," ")];
+          return kws.some(kw => killer.includes(kw));
+        });
+        const missed = flags.filter(f => !identified.includes(f));
+
+        if (identified.length > 0){
+          fb.push({ field:"Deal killer", type:"aligned",
+            note:`You correctly identified: ${identified.map(f=>f.replaceAll("_"," ")).join(", ")}. This is one of the known risks for this deal.`
+          });
+        }
+        if (missed.length > 0){
+          fb.push({ field:"Deal killer", type:identified.length > 0 ? "gap" : "conflict",
+            note:`You missed the following known risks: ${missed.map(f=>f.replaceAll("_"," ")).join(", ")}. These should factor into your thesis.`
+          });
+        }
+      }
+    }
+
+    return fb;
+  }
+
+  return { review, evaluateThesis };
 })();
