@@ -956,27 +956,27 @@ btnPass.addEventListener("click", () => setDecision("PASS"));
 
   function renderTrackRecord(){
     const rows = Storage.loadDecisions();
-    const host = document.getElementById(“trackTable”);
+    const host = document.getElementById("trackTable");
 
     if (!rows.length){
-      host.innerHTML = `<div class=”card”><p class=”muted”>No decisions yet. Open a deal and click “Reveal Coach Review.”</p></div>`;
+      host.innerHTML = `<div class="card"><p class="muted">No decisions yet. Open a deal and click "Reveal Coach Review."</p></div>`;
       return;
     }
 
     const N = rows.length;
     const TYPE_LABELS = {
-      yield_stable: “Yield Stable”,
-      classic_value_add: “Value Add”,
-      heavy_lift: “Heavy Lift”
+      yield_stable: "Yield Stable",
+      classic_value_add: "Value Add",
+      heavy_lift: "Heavy Lift"
     };
 
     // --- Decision alignment ---
     // Aligned = direction matches: BUY ≈ BUY/BORDERLINE, PASS ≈ PASS/BORDERLINE
     function isAligned(r){
       const y = r.yourDecision, c = r.coachDecision;
-      if (!y || y === “UNSET”) return null;
-      if (y === “BUY”  && (c === “BUY”  || c === “BORDERLINE”)) return true;
-      if (y === “PASS” && (c === “PASS” || c === “BORDERLINE”)) return true;
+      if (!y || y === "UNSET") return null;
+      if (y === "BUY"  && (c === "BUY"  || c === "BORDERLINE")) return true;
+      if (y === "PASS" && (c === "PASS" || c === "BORDERLINE")) return true;
       return false;
     }
     const decided = rows.filter(r => isAligned(r) !== null);
@@ -1003,7 +1003,7 @@ btnPass.addEventListener("click", () => setDecision("PASS"));
 
     // --- Assumption bias ---
     const withInputs = rows.filter(r => r.inputRentGrowth != null);
-    let biasSectionHTML = “”;
+    let biasSectionHTML = "";
     if (withInputs.length >= 2){
       const avgRG = withInputs.reduce((s,r) => s + r.inputRentGrowth, 0) / withInputs.length;
       const avgEC = withInputs.reduce((s,r) => s + r.inputExitCap,    0) / withInputs.length;
@@ -1012,13 +1012,13 @@ btnPass.addEventListener("click", () => setDecision("PASS"));
       const overPremCeiling= withInputs.filter(r => r.inputRentPremium > (r.reasonableRentPremiumCeiling|| Infinity)).length;
 
       const biasStatus = (count, total) => count > total * 0.4
-        ? `<span style=”color:#e0c860;”>⚠ ${count}/${total} times</span>`
-        : `<span style=”color:#6fe0a0;”>✓ ${count}/${total} times</span>`;
+        ? `<span style="color:#e0c860;">⚠ ${count}/${total} times</span>`
+        : `<span style="color:#6fe0a0;">✓ ${count}/${total} times</span>`;
 
       biasSectionHTML = `
-        <div class=”card”>
+        <div class="card">
           <h3>Assumption Tendencies</h3>
-          <p class=”muted” style=”margin:4px 0 12px;”>Based on ${withInputs.length} deal${withInputs.length>1?”s”:””} with saved assumption data. “Aggressive” means outside the deal's reasonable range.</p>
+          <p class="muted" style="margin:4px 0 12px;">Based on ${withInputs.length} deal${withInputs.length>1?"s":""} with saved assumption data. "Aggressive" means outside the deal's reasonable range.</p>
           <table>
             <thead><tr><th>Assumption</th><th>Your Average</th><th>Aggressive</th><th>Assessment</th></tr></thead>
             <tbody>
@@ -1026,19 +1026,19 @@ btnPass.addEventListener("click", () => setDecision("PASS"));
                 <td>Rent Growth</td>
                 <td>${(avgRG*100).toFixed(1)}%</td>
                 <td>${biasStatus(aggressiveRG, withInputs.length)}</td>
-                <td>${aggressiveRG > withInputs.length * 0.4 ? “Tends aggressive — common source of IRR inflation” : “Reasonable range”}</td>
+                <td>${aggressiveRG > withInputs.length * 0.4 ? "Tends aggressive — common source of IRR inflation" : "Reasonable range"}</td>
               </tr>
               <tr>
                 <td>Exit Cap Rate</td>
                 <td>${(avgEC*100).toFixed(2)}%</td>
                 <td>${biasStatus(aggressiveEC, withInputs.length)}</td>
-                <td>${aggressiveEC > withInputs.length * 0.4 ? “Tends aggressive (too low) — overstates exit price” : “Reasonable range”}</td>
+                <td>${aggressiveEC > withInputs.length * 0.4 ? "Tends aggressive (too low) — overstates exit price" : "Reasonable range"}</td>
               </tr>
               <tr>
                 <td>Rent Premium</td>
                 <td>—</td>
                 <td>${biasStatus(overPremCeiling, withInputs.length)}</td>
-                <td>${overPremCeiling > withInputs.length * 0.4 ? “Often above ceiling — verify with comps” : “Usually in range”}</td>
+                <td>${overPremCeiling > withInputs.length * 0.4 ? "Often above ceiling — verify with comps" : "Usually in range"}</td>
               </tr>
             </tbody>
           </table>
@@ -1047,7 +1047,7 @@ btnPass.addEventListener("click", () => setDecision("PASS"));
 
     // --- Sketch calibration ---
     const withSketch = rows.filter(r => r.sketchType || r.sketchIRR);
-    let sketchSectionHTML = “”;
+    let sketchSectionHTML = "";
     if (withSketch.length >= 2){
       const withType  = withSketch.filter(r => r.sketchType);
       const withIRR   = withSketch.filter(r => r.sketchIRR);
@@ -1057,23 +1057,23 @@ btnPass.addEventListener("click", () => setDecision("PASS"));
       const irrPct    = withIRR.length  ? Math.round(irrRight  / withIRR.length  * 100) : null;
 
       sketchSectionHTML = `
-        <div class=”card”>
+        <div class="card">
           <h3>First Look Calibration</h3>
-          <p class=”muted” style=”margin:4px 0 12px;”>How well does your pre-analysis intuition match the model?</p>
+          <p class="muted" style="margin:4px 0 12px;">How well does your pre-analysis intuition match the model?</p>
           <table>
             <thead><tr><th>Guess</th><th>Correct</th><th>Attempts</th><th>Accuracy</th><th></th></tr></thead>
             <tbody>
               <tr>
                 <td>Deal Type</td>
                 <td>${typeRight}</td><td>${withType.length}</td>
-                <td>${typePct !== null ? typePct + “%” : “—“}</td>
-                <td>${typePct !== null ? (typePct >= 60 ? '<span style=”color:#6fe0a0;”>Good</span>' : '<span style=”color:#e0c860;”>Needs work</span>') : “”}</td>
+                <td>${typePct !== null ? typePct + "%" : "—"}</td>
+                <td>${typePct !== null ? (typePct >= 60 ? '<span style="color:#6fe0a0;">Good</span>' : '<span style="color:#e0c860;">Needs work</span>') : ""}</td>
               </tr>
               <tr>
                 <td>IRR Bucket</td>
                 <td>${irrRight}</td><td>${withIRR.length}</td>
-                <td>${irrPct !== null ? irrPct + “%” : “—“}</td>
-                <td>${irrPct !== null ? (irrPct >= 50 ? '<span style=”color:#6fe0a0;”>Good</span>' : '<span style=”color:#e0c860;”>Needs work</span>') : “”}</td>
+                <td>${irrPct !== null ? irrPct + "%" : "—"}</td>
+                <td>${irrPct !== null ? (irrPct >= 50 ? '<span style="color:#6fe0a0;">Good</span>' : '<span style="color:#e0c860;">Needs work</span>') : ""}</td>
               </tr>
             </tbody>
           </table>
@@ -1082,7 +1082,7 @@ btnPass.addEventListener("click", () => setDecision("PASS"));
 
     // --- Stress profile ---
     const withStress = rows.filter(r => r.exitStressIRR != null);
-    let stressSectionHTML = “”;
+    let stressSectionHTML = "";
     if (withStress.length >= 2){
       const avgExitStress = withStress.reduce((s,r) => s + r.exitStressIRR, 0)     / withStress.length;
       const withVac       = withStress.filter(r => r.vacStressMinDSCR != null);
@@ -1090,17 +1090,17 @@ btnPass.addEventListener("click", () => setDecision("PASS"));
       const fragileCount  = withStress.filter(r => r.exitStressIRR < 0.12).length;
 
       stressSectionHTML = `
-        <div class=”card”>
+        <div class="card">
           <h3>Deal Fragility Profile</h3>
-          <p class=”muted” style=”margin:4px 0 12px;”>How well do your analyzed deals hold up under stress?</p>
-          <div class=”kv” style=”margin-bottom:12px;”>
-            <div><div class=”k”>Avg Exit +100bps IRR</div><div class=”v”>${pct(avgExitStress)}</div></div>
-            ${avgVacStress !== null ? `<div><div class=”k”>Avg Vacancy +5% DSCR</div><div class=”v”>${avgVacStress.toFixed(2)}</div></div>` : “”}
-            <div><div class=”k”>Fragile to cap expansion (&lt;12% stressed IRR)</div><div class=”v”>${fragileCount} / ${withStress.length}</div></div>
+          <p class="muted" style="margin:4px 0 12px;">How well do your analyzed deals hold up under stress?</p>
+          <div class="kv" style="margin-bottom:12px;">
+            <div><div class="k">Avg Exit +100bps IRR</div><div class="v">${pct(avgExitStress)}</div></div>
+            ${avgVacStress !== null ? `<div><div class="k">Avg Vacancy +5% DSCR</div><div class="v">${avgVacStress.toFixed(2)}</div></div>` : ""}
+            <div><div class="k">Fragile to cap expansion (&lt;12% stressed IRR)</div><div class="v">${fragileCount} / ${withStress.length}</div></div>
           </div>
           ${fragileCount > withStress.length * 0.4
-            ? `<p class=”insightWarning”>&#9888; More than 40% of your deals break under a +100bps exit cap stress. Look for deals with wider return cushion or lower entry basis.</p>`
-            : `<p class=”insightNote” style=”color:#6fe0a0;”>&#9432; Your deals generally hold up under exit cap stress — good margin discipline.</p>`}
+            ? `<p class="insightWarning">&#9888; More than 40% of your deals break under a +100bps exit cap stress. Look for deals with wider return cushion or lower entry basis.</p>`
+            : `<p class="insightNote" style="color:#6fe0a0;">&#9432; Your deals generally hold up under exit cap stress — good margin discipline.</p>`}
         </div>`;
     }
 
@@ -1126,10 +1126,10 @@ btnPass.addEventListener("click", () => setDecision("PASS"));
     }
 
     const insightSectionHTML = insights.length ? `
-      <div class=”card insightCard”>
+      <div class="card insightCard">
         <h3>&#9432; Pattern Insights</h3>
-        ${insights.map(i => `<p class=”insightNote”>${i}</p>`).join(“”)}
-      </div>` : “”;
+        ${insights.map(i => `<p class="insightNote">${i}</p>`).join("")}
+      </div>` : "";
 
     // --- By deal type table ---
     const typeRows = Object.entries(byType)
@@ -1137,73 +1137,73 @@ btnPass.addEventListener("click", () => setDecision("PASS"));
       .map(([p,d]) => {
         const avgSc = Math.round(d.scores.reduce((a,b)=>a+b,0) / d.scores.length);
         const avgIr = d.irrs.reduce((a,b)=>a+b,0) / d.irrs.length;
-        const alPct = d.total ? Math.round(d.aligned / d.total * 100) : “—“;
+        const alPct = d.total ? Math.round(d.aligned / d.total * 100) : "—";
         return `<tr>
-          <td><span class=”badge”>${TYPE_LABELS[p]||p}</span></td>
+          <td><span class="badge">${TYPE_LABELS[p]||p}</span></td>
           <td>${d.total}</td>
           <td>${alPct}%</td>
           <td>${avgSc} / 100</td>
           <td>${pct(avgIr)}</td>
         </tr>`;
-      }).join(“”);
+      }).join("");
 
     // --- History table rows ---
     const historyRows = rows.map(r => {
       const al = isAligned(r);
-      const alignIcon = al === true  ? `<span style=”color:#6fe0a0;”>✓</span>`
-                      : al === false ? `<span style=”color:#e07070;”>✗</span>` : `<span class=”muted”>—</span>`;
-      const recStyle = r.coachDecision === “BUY”        ? “color:#6fe0a0;”
-                     : r.coachDecision === “PASS”       ? “color:#e07070;”
-                     : “color:#e0c860;”;
-      const yourStyle = r.yourDecision === “BUY”  ? “color:#6fe0a0;”
-                      : r.yourDecision === “PASS” ? “color:#e07070;” : “”;
+      const alignIcon = al === true  ? `<span style="color:#6fe0a0;">✓</span>`
+                      : al === false ? `<span style="color:#e07070;">✗</span>` : `<span class="muted">—</span>`;
+      const recStyle = r.coachDecision === "BUY"        ? "color:#6fe0a0;"
+                     : r.coachDecision === "PASS"       ? "color:#e07070;"
+                     : "color:#e0c860;";
+      const yourStyle = r.yourDecision === "BUY"  ? "color:#6fe0a0;"
+                      : r.yourDecision === "PASS" ? "color:#e07070;" : "";
       return `<tr>
-        <td class=”muted” style=”font-size:12px;”>${new Date(r.ts).toLocaleDateString()}</td>
+        <td class="muted" style="font-size:12px;">${new Date(r.ts).toLocaleDateString()}</td>
         <td>
           ${r.dealName}
-          ${r.dealProfile ? `<br><span class=”muted” style=”font-size:11px;”>${TYPE_LABELS[r.dealProfile]||r.dealProfile}</span>` : “”}
+          ${r.dealProfile ? `<br><span class="muted" style="font-size:11px;">${TYPE_LABELS[r.dealProfile]||r.dealProfile}</span>` : ""}
         </td>
-        <td style=”${yourStyle}”>${r.yourDecision}</td>
-        <td style=”${recStyle}”>${r.coachDecision}</td>
+        <td style="${yourStyle}">${r.yourDecision}</td>
+        <td style="${recStyle}">${r.coachDecision}</td>
         <td>${alignIcon}</td>
         <td>${r.score}</td>
         <td>${((r.irr||0)*100).toFixed(1)}%</td>
         <td>${Number(r.minDSCR||0).toFixed(2)}</td>
-        <td>${r.exitStressIRR != null ? ((r.exitStressIRR*100).toFixed(1) + “%”) : “—“}</td>
+        <td>${r.exitStressIRR != null ? ((r.exitStressIRR*100).toFixed(1) + "%") : "—"}</td>
       </tr>`;
-    }).join(“”);
+    }).join("");
 
     // --- Assemble page ---
     host.innerHTML = `
-      <div class=”card”>
+      <div class="card">
         <h3>Overview</h3>
-        <div class=”kv”>
-          <div><div class=”k”>Deals Analyzed</div><div class=”v”>${N}</div></div>
-          <div><div class=”k”>Decision Alignment</div><div class=”v”>${alignPct !== null ? alignPct + “%” : “—“}</div></div>
-          <div><div class=”k”>Average Score</div><div class=”v”>${avgScore} / 100</div></div>
-          <div><div class=”k”>Average IRR</div><div class=”v”>${pct(avgIRR)}</div></div>
-          <div><div class=”k”>Coach: BUY / BORDERLINE / PASS</div><div class=”v”>${coachDist.BUY} / ${coachDist.BORDERLINE} / ${coachDist.PASS}</div></div>
+        <div class="kv">
+          <div><div class="k">Deals Analyzed</div><div class="v">${N}</div></div>
+          <div><div class="k">Decision Alignment</div><div class="v">${alignPct !== null ? alignPct + "%" : "—"}</div></div>
+          <div><div class="k">Average Score</div><div class="v">${avgScore} / 100</div></div>
+          <div><div class="k">Average IRR</div><div class="v">${pct(avgIRR)}</div></div>
+          <div><div class="k">Coach: BUY / BORDERLINE / PASS</div><div class="v">${coachDist.BUY} / ${coachDist.BORDERLINE} / ${coachDist.PASS}</div></div>
         </div>
       </div>
 
       ${insightSectionHTML}
 
       ${typeRows ? `
-      <div class=”card”>
+      <div class="card">
         <h3>Performance by Deal Type</h3>
         <table>
           <thead><tr><th>Type</th><th>Deals</th><th>Alignment</th><th>Avg Score</th><th>Avg IRR</th></tr></thead>
           <tbody>${typeRows}</tbody>
         </table>
-      </div>` : “”}
+      </div>` : ""}
 
       ${biasSectionHTML}
       ${sketchSectionHTML}
       ${stressSectionHTML}
 
-      <div class=”card”>
+      <div class="card">
         <h3>Deal History</h3>
-        <div style=”overflow:auto;”>
+        <div style="overflow:auto;">
           <table>
             <thead>
               <tr><th>Date</th><th>Deal</th><th>You</th><th>Coach</th><th>✓</th><th>Score</th><th>IRR</th><th>DSCR</th><th>Exit Stress</th></tr>
