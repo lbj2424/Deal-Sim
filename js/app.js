@@ -161,8 +161,18 @@ function renderMonthlyT12Table(t12m){
 
   async function loadDeals(){
     if (DEALS.length) return DEALS;
-    const res = await fetch("./data/deals.json"); // safer for project pages
-    DEALS = await res.json();
+    try {
+      const res = await fetch("./data/deals.json");
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      DEALS = await res.json();
+    } catch(e) {
+      const grid = document.getElementById("dealGrid");
+      if (grid) grid.innerHTML = `<p style="color:#e07070;padding:14px;">
+        Could not load deals.json (${e.message}).<br>
+        Open this app through a web server — e.g. VS Code Live Server or GitHub Pages.
+        File:// URLs block fetch requests.
+      </p>`;
+    }
     return DEALS;
   }
 
